@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge, LinearRegression, Lasso, Ridge
 from sklearn.model_selection import cross_validate
 import sklearn.linear_model as skl
@@ -40,30 +39,62 @@ x = np.ravel(x)
 y = np.ravel(y)
 z = np.ravel(z)
 
-x2 = x*x
-y2 = y*y
-x3 = x*x*x
-y3 = y*y*y
 
-
-DesignMatrix = np.c_[np.ones((len(x),1)),x,x2,y2,x*y,x3,y3,x*y2,x2*y,
+def designmatrix(x,y):
+   
+    x2 = x*x
+    y2 = y*y
+    x3 = x*x*x
+    y3 = y*y*y
+    
+    X = np.c_[np.ones((len(x),1)),x,x2,y2,x*y,x3,y3,x*y2,x2*y,
                      x*x3,y*y3,x3*y,x*y3,x2*y2,x3*x2,y3*y2,(x2*x2)*y,
                      x*(y2*y2),x3*y2,x2*y3]
-X = DesignMatrix
+    
+    return X
 
-beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
 
 
-# Now we compute y = Xb
-z_tilde = X.dot(beta)
+def fitBeta(X,z):
 
-#adding normal distribution
-eps = np.random.normal(0,1,len(z_tilde))
-z_tilde += eps*0.01 
+    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
+    return (beta)
+
+def predictor(X,beta):
+    # Now we compute z = Xb 
+    z_tilde = X.dot(beta)
+
+    #adding normal distribution
+    eps = np.random.normal(0,1,len(z_tilde))
+    z_tilde += eps*0.0 
+    return (z_tilde)
+
+scores_KFold = np.zeros(k)
+i=0
+for train_inds, test_inds in kfold.split(x_data):
+    xtrain = x[train_inds]
+    ytrain = y[train_inds]
+    ztrain = z[train_inds]
+
+    xtest = x[test_inds]
+    ytest = y[test_inds]
+    ztest = z[test_inds]
+
+    Xtrain = designmatrix(xtrain,ytrain)
+    betatrain = fitBeta(Xtrain,ztrain)
+
+    Xtest = designmatrix(xtest,ytest)
+
+    zpred = predictor(Xtest,betatrain)
+
+    #scores_KFold[i] = np.sum((zpred - zmaybe))
+
+    i += 1
+
 
 # We use now Scikit-Learn's linear regressor for control of our results
 clf = skl.LinearRegression().fit(X, z)
-z_tilde_skl = clf.predict(X)
+z_tilde_skl = clf).predict(X)
 
 #print(ztilde-ztilde_skl)
 
@@ -83,13 +114,26 @@ print("Mean squared error for sklearn: %f" % mean_squared_error(z, z_tilde))
 print("R2 score for sklearn: %f " % r2_score(z, z_tilde))
 
 from sklearn.model_selection import train_test_split
-Z_train, Z_test = train_test_split(z_tilde, test_size=0.33)
+Z_train, Z_test = train_test_split(z_tilde, test_size=0.20)
+
+
+
+-_BEST = beta . Z_test  
+
+-_best - Z = r2, MSE osv 
+
+-10 
+
+-ean z_tilde
+
+
 
 print (len(Z_train), len(Z_test))
 
-
 from sklearn.model_selection import KFold
-scores_KFold = np.zeros((nlambdas, k))
+scores_KFold = np.zeros(k)
+
+
 
 
 
