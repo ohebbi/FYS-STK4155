@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 
 
 
-fig = plt.figure()
+#fig = plt.figure()
 #ax = fig.gca(projection="3d")
 
 # Make data.
@@ -178,10 +178,12 @@ y_test = np.ravel(y_test)
 
 z_test = FrankeFunction(x_test, y_test)
 
+#polynomial of degree 0 to 5
 t = [0,1,4,8,13,19]
-#print (X[:,:5])
 j=0
-#print(X[:,:5])
+
+bias = np.zeros(len(t))
+variance = np.zeros(len(t))
 
 
 for i in t:
@@ -193,23 +195,33 @@ for i in t:
     #from beta_perfect
     scores_R2[j] = R2(z_test, z_pred)
     scores_MSE[j] = MSE(z_test, z_pred)
+    square = z_test - np.mean(z_pred)
+    bias[j] = np.mean((square)**2  )
+    variance[j] = np.mean( np.var(z_pred))
+
     j += 1
+    """
     plt.subplot(2,1,1)
     plt.plot(x_test,z_test)
     plt.subplot(2,1,2)
     plt.title("%f"% i)
     plt.plot(x_test,z_pred)
     plt.show()
+    """
 
 print("Mean R2 ",scores_R2)
 print("Mean MSE ",scores_MSE)
-
+print("Bias^2", bias)
+print("Variance", bias)
 """
 Task c)
 """
 plt.plot([0,1,2,3,4,5],scores_MSE)
+plt.plot([0,1,2,3,4,5],bias, 'b', )
+plt.plot([0,1,2,3,4,5],variance,'r')
 plt.show()
-
+plt.plot([0,1,2,3,4,5],bias, 'b', )
+plt.show()
 
 
 
