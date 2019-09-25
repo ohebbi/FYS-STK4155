@@ -44,20 +44,18 @@ def main():
     """
     5-fold crossvalidation
     """
-    t = np.linspace(1,5,5)
-    #test_R2 = np.zeros(len(t))
+    t = np.linspace(1,10,10)
+
+    bias = np.zeros(len(t))
+    variance = np.zeros(len(t))
 
     test_MSE = np.zeros(len(t))
-    test_bias = np.zeros(len(t))
-    test_variance = np.zeros(len(t))
+    test_R2 = np.zeros(len(t))
 
     train_MSE = np.zeros(len(t))
-    train_bias = np.zeros(len(t))
-    train_variance = np.zeros(len(t))
-    train_error = np.zeros(len(t))
-    #    print (x)
+    train_R2 = np.zeros(len(t))
 
-    x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
+    #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
 
     #    print (x_train)
 
@@ -65,18 +63,30 @@ def main():
     for polygrad in t:
 
         j = int(polygrad) - 1
-        train_MSE[j], train_bias[j], train_variance[j], train_error[j], beta = \
-                            crossvalidation(x_train,y_train,z_train,
-                            x_test, y_test, z_test,
-                            k, polygrad, regressiontype = 'OLS')
-                            #length to beta should be equal to dimension of X
+        scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
+        train_MSE[j] = scores[0]
+        train_R2[j] = scores[1]
 
-    plt.plot(t,train_variance)
-    plt.plot(t,train_bias)
-    plt.plot(t,train_error)
-    plt.legend(["train variance", "train bias","train error"])
+        test_MSE[j] = scores[2]
+        bias[j] = scores[3]
+        variance[j] = scores[4]
+
+        #print('Bias^2:', test_bias[j])
+        #print('Var:', test_variance[j])
+        #print('{} >= {} + {} = {}'.format(test_MSE[j],test_bias[j], test_variance[j], test_bias[j]+test_variance[j]))
+
+    plt.plot(t,test_MSE)
+    plt.plot(t,variance)
+    plt.plot(t,bias)
+
+    plt.legend(["test_MSE","variance", "bias"])
     plt.show()
+
+    plt.plot(t,train_MSE)
+    plt.plot(t,test_MSE)
+    plt.show()
+
     """
     plt.plot(t,train_MSE,'r')
     plt.plot(t,test_MSE,'b')

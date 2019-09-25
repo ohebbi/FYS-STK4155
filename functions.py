@@ -97,12 +97,9 @@ def find_designmatrix(x,y, polygrad=5):
     y2 = y*y
     x3 = x*x*x
     y3 = y*y*y
-    if (polygrad>5):
-        print ("error! polygrad is bigger than five!!")
-        exit(1)
+
     if (polygrad<1):
-        print ("error! polygrad is less than 1!!")
-        exit(1)
+        raise ValueError ("error! polygrad is less than 1!!")
 
     if polygrad == 1:
         X = np.c_[np.ones((len(x),1)),x, y] #3
@@ -129,6 +126,16 @@ def find_designmatrix(x,y, polygrad=5):
                      x3,y3,x*y2,x2*y, #3-degree polynomial
                      x*x3,y*y3,x3*y,x*y3,x2*y2, #4-degree polynomial
                      x3*x2,y3*y2,(x2*x2)*y, x*(y2*y2),x3*y2,x2*y3] #5-degree polynomial #21
+
+    #General formula to avoid hardcoding too much.
+
+    elif polygrad > 5:
+        X = np.zeros( (len(x), int(0.5*(polygrad + 2)*(polygrad + 1)) ) )
+        poly = 0
+        for i in range(int(polygrad) + 1):
+            for j in range(int(polygrad) + 1 - i):
+                X[:,poly] = (x**i)*(y**j)
+                poly += 1
     return X
 
 def R2(z_data, z_model):
@@ -214,8 +221,9 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
         beta_perfect += betatrain
         i += 1
 
+    print (z_ALL_pred)
+    print (np.mean(z_ALL_pred,axis=1,keepdims=True))
 
-    #print (z_test, z_ALL_pred)
 
     error = np.mean( np.mean((z_test[:,np.newaxis] - z_ALL_pred)**2, axis=1, keepdims=True) )
     bias = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
@@ -223,24 +231,34 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
 
 
     #print('Polynomial degree:', degree)
+    """
     print('Error:', error)
     print('Bias^2:', bias)
     print('Var:', variance)
     print('{} >= {} + {} = {}'.format(error, bias, variance, bias+variance))
-
-    estimated_MSE = np.mean(scores_MSE)
+    """
+    #estimated_MSE = np.mean(scores_MSE)
 
     return (estimated_MSE, bias, variance, error, (beta_perfect/float(k)))
-def crossvalidation_MSE(x_train, y_train, z_train, k, polygrad, regressiontype = 'OLS',lamb=0):
+
+
+
+def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, regressiontype = 'OLS',lamb=0):
+
+    p = int(0.5*(polygrad + 2)*(polygrad + 1))
 
     scores_MSE = np.zeros(k)
+
     bias = np.zeros(k)
     variance = np.zeros(k)
     scores_R2 = np.zeros(k)
+    betas = np.zeros((p,k))
 
     #finding correct length of beta with the beautiful dummy variabe
+    """
     dummy_variable = find_designmatrix(np.zeros(1),np.zeros(1),polygrad)
     beta_perfect = np.zeros(len(dummy_variable[0]))
+    """
 
     kfold = KFold(n_splits = k, shuffle=True)
 
@@ -262,34 +280,38 @@ def crossvalidation_MSE(x_train, y_train, z_train, k, polygrad, regressiontype =
             betatrain = OLS(Xtrain,ztrain)
         elif regressiontype == 'Ridge':
             betatrain = ridge_regression(Xtrain, ztrain, lamb)
-
+        elif regressiontype == 'Lasso':
+            betatrain = lasso_regression(Xtrain, ztrain, lamb)
         else:
-            print ("regression-type is lacking input!")
-            exit(1)
-
-
-
-        """ To be implemented!
-        elif regressiontype = 'Lasso':
-            betratrain = lasso()
-        """
+            raise ValueError ("regression-type is lacking input!")
 
         Xval = find_designmatrix(xval,yval,polygrad)
-
         zpred = Xval @ betatrain
-        #print(len(betatrain), len(Xtest))
-
 
         scores_MSE[i] =  MSE(zval,zpred)
-        square = (zval - np.mean(zpred,axis=1,keepdims=True))**2
-        bias[i] = np.mean((square))
-        variance[i] = np.mean( np.var(zpred))
         scores_R2[i] = R2(zval,zpred)
         #print (len(beta_perfect), len(betatrain))
-        beta_perfect += betatrain
+        betas[:,i] = betatrain
         i += 1
 
     estimated_MSE = np.mean(scores_MSE)
-    estimated_bias = np.mean((bias))
-    estimated_variance = np.mean(variance)
-    return (estimated_MSE, estimated_bias, estimated_variance, (beta_perfect/float(k)))
+    estimated_R2 = np.mean(scores_R2)
+    return [estimated_MSE, estimated_R2], betas
+def bias_variance(x,y,z,polygrad,k=5,regressiontype = 'OLS'):
+
+    x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
+
+    scores, betas = k_fold_cross_validation(x, y, z, k, polygrad, regressiontype)
+    MSE_train = scores[0]
+    R2_train = scores[1]
+
+    X_test = find_designmatrix(x_test, y_test, polygrad=polygrad)
+    z_pred = X_test @ betas
+
+    z_test = np.reshape(z_test,(len(z_test),1))
+
+    MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
+    bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
+    variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
+
+    return [MSE_train,R2_train, MSE_test, bias_test, variance_test]
