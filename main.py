@@ -8,7 +8,6 @@ Created on Tue Sep 10 14:02:45 2019
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-#from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib.pyplot import cm
 
@@ -30,7 +29,9 @@ def main():
 
     #exercise a)
     x,y,z = generate_data()
-    x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
+
+    #if overfit: activate next line
+    #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
 
 
 
@@ -53,10 +54,54 @@ def main():
     train_MSE = np.zeros(len(t))
     train_bias = np.zeros(len(t))
     train_variance = np.zeros(len(t))
+    train_error = np.zeros(len(t))
+    #    print (x)
 
+    x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
+
+    #    print (x_train)
 
     k = 5 #cross fold
     for polygrad in t:
+
+        j = int(polygrad) - 1
+        train_MSE[j], train_bias[j], train_variance[j], train_error[j], beta = \
+                            crossvalidation(x_train,y_train,z_train,
+                            x_test, y_test, z_test,
+                            k, polygrad, regressiontype = 'OLS')
+                            #length to beta should be equal to dimension of X
+
+
+    plt.plot(t,train_variance)
+    plt.plot(t,train_bias)
+    plt.plot(t,train_error)
+    plt.legend(["train variance", "train bias","train error"])
+    plt.show()
+    """
+    plt.plot(t,train_MSE,'r')
+    plt.plot(t,test_MSE,'b')
+    plt.legend(["train MSE","test MSE"])
+    plt.show()
+    """
+
+    """
+    Terrain data
+    """
+    """
+    x,y,z = terrain_data()
+    x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
+
+    test_MSE = np.zeros(len(t))
+    test_bias = np.zeros(len(t))
+    test_variance = np.zeros(len(t))
+
+    train_MSE = np.zeros(len(t))
+    train_bias = np.zeros(len(t))
+    train_variance = np.zeros(len(t))
+
+
+    k = 5 #cross fold
+    for polygrad in tqdm(t):
 
         j = int(polygrad) - 1
         train_MSE[j], train_bias[j], train_variance[j], beta = crossvalidation(x_train,y_train,z_train, k, polygrad, regressiontype = 'OLS') #length to beta should be equal to dimension of X
@@ -69,7 +114,6 @@ def main():
         square = z_test - np.mean(z_pred)
         test_bias[j] = np.mean( (square)**2 )
         test_variance[j] = np.mean( np.var(z_pred))
-    
     plt.plot(t,train_MSE)
     plt.plot(t,train_variance)
     plt.plot(t,train_bias)
@@ -78,20 +122,21 @@ def main():
     plt.plot(t,test_MSE)
     plt.plot(t,test_variance)
     plt.plot(t,test_bias)
-    plt.legend(["test MSE","test variance", "test bias"])
+    plt.plot(t,test_variance+test_bias)
+    plt.legend(["test MSE","test variance", "test bias","bias + variance"])
     plt.show()
 
     plt.plot(t,train_MSE,'r')
     plt.plot(t,test_MSE,'b')
     plt.legend(["train MSE","test MSE"])
     plt.show()
-
+    """
 
     """
     Ridge regression
     """
 
-
+    """
     test_MSE_ridge = np.zeros(len(t))
     test_bias_ridge = np.zeros(len(t))
     test_variance_ridge = np.zeros(len(t))
@@ -110,7 +155,10 @@ def main():
         for polygrad in t:
 
             j = int(polygrad) - 1
-            train_MSE_ridge[j], train_bias_ridge[j], train_variance_ridge[j], beta = crossvalidation(x_train,y_train,z_train, k, polygrad, regressiontype = 'Ridge', lamb=lamb) #length to beta should be equal to dimension of X
+            train_MSE_ridge[j], train_bias_ridge[j], train_variance_ridge[j], \
+            beta = crossvalidation(x_train,y_train,z_train, k, polygrad, \
+            regressiontype = 'Lasso', lamb=lamb)
+
             X = find_designmatrix(x_test,y_test, polygrad)
 
             z_pred = X.dot(beta)
@@ -123,6 +171,26 @@ def main():
         c = next(color)
         plt.plot(t,train_MSE_ridge,linewidth=0.8,c=c)
     #plt.show()
+    """
+
+
+    """
+    plt.plot(t,train_MSE_ridge)
+    plt.plot(t,train_variance_ridge)
+    plt.plot(t,train_bias_ridge)
+    plt.legend(["train MSE","train variance", "train bias"])
+    plt.show()
+    plt.plot(t,test_MSE_ridge)
+    plt.plot(t,test_variance_ridge)
+    plt.plot(t,test_bias_ridge)
+    plt.legend(["test MSE","test variance", "test bias"])
+    plt.show()
+
+    plt.plot(t,train_MSE_ridge,'r')
+    plt.plot(t,test_MSE_ridge,'b')
+    plt.legend(["train MSE","test MSE"])
+    plt.show()
+    """
     """
     #exercise c)
     #K-fold CV lamb=0

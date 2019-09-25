@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-
+from imageio import imread
 from sklearn.linear_model import Ridge, LinearRegression, Lasso, Ridge
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
@@ -22,7 +22,9 @@ def FrankeFunction(x,y):
     return term1 + term2 + term3 + term4
 
 def generate_data(plott = False):
-    # Make data.
+    """
+    Generates data.
+    """
     x_data = np.arange(0, 1, 0.05)
     y_data = np.arange(0, 1, 0.05)
     x, y = np.meshgrid(x_data,y_data)
@@ -48,6 +50,7 @@ def generate_data(plott = False):
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)
+
     eps = np.random.normal(0,1,len(z))
     z += 0.1*eps
 
@@ -55,6 +58,38 @@ def generate_data(plott = False):
     #print (x_train)
 
 
+def terrain_data(plott = True):
+    """
+
+    """
+
+    #load the terrain
+    terrain1 = imread('SRTM_data_Norway_1.tif')
+
+    x_data = np.arange(0,len(terrain1[0]),1)
+    y_data = np.arange(0,len(terrain1[:,0]),1)
+    z_data = terrain1
+
+
+
+
+    x, y = np.meshgrid(x_data,y_data)
+
+    print (len(x_data), len(y_data))
+    if plott == True:
+        plt.figure()
+        plt.title("Terrain over part of Norway")
+        plt.imshow(terrain1)#,cmap='gray')
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.show()
+
+    #flatten the matrix out
+    x = np.ravel(x)
+    y = np.ravel(y)
+    z = np.ravel(z_data)
+
+    return x, y, z_data
 
 def find_designmatrix(x,y, polygrad=5):
 
@@ -124,7 +159,79 @@ def ridge_regression(X,z,lamb):
     beta = np.linalg.inv(X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))).dot(X.T).dot(z)
     return beta
 
-def crossvalidation(x_train, y_train, z_train, k, polygrad, regressiontype = 'OLS',lamb=0):
+def lasso_regression(X,z,lamb):
+    clf = Lasso(alpha=lamb)
+    clf.fit(X,z)
+    return (clf.coef_)
+
+def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygrad, regressiontype = 'OLS',lamb=0):
+
+    scores_MSE = np.zeros(k)
+    scores_R2 = np.zeros(k)
+
+    #finding correct length of beta with the beautiful dummy variabe
+    dummy_variable = find_designmatrix(np.zeros(1),np.zeros(1),polygrad)
+    beta_perfect = np.zeros(len(dummy_variable[0]))
+
+    print
+    kfold = KFold(n_splits = k, shuffle=True)
+
+    z_ALL_pred = np.empty((z_test.shape[0], k))
+    #splitting our training data into training- and validation data
+    i =0
+    for train_inds, test_inds in (kfold.split(x_train)):
+        xtrain = x_train[train_inds]
+        ytrain = y_train[train_inds]
+        ztrain = z_train[train_inds]
+
+        xtest2 = x_train[test_inds]
+        ytest2 = y_train[test_inds]
+        ztest2 = z_train[test_inds]
+        #(len(xtrain),len(x), len(xtest))
+        Xtrain = find_designmatrix(xtrain,ytrain, polygrad)
+
+        if regressiontype == 'OLS':
+            betatrain = OLS(Xtrain,ztrain)
+        elif regressiontype == 'Ridge':
+            betatrain = ridge_regression(Xtrain, ztrain, lamb)
+        elif regressiontype == 'Lasso':
+            betatrain = lasso_regression(Xtrain, ztrain, lamb)
+        else:
+            raise ValueError ("regression-type is lacking input!")
+        #print (i)
+        Xtest = find_designmatrix(x_test,y_test,polygrad)
+
+        z_ALL_pred[:, i] = Xtest @ betatrain
+
+        #print ( z_ALL_pred[:,i])
+        #print(len(betatrain), len(Xtest))
+
+
+        #scores_MSE[i] =  MSE(ztest,z_ALL_pred[:, i])
+        #scores_R2[i] = R2(ztest,z_ALL_pred[:,i])
+
+        #print (len(beta_perfect), len(betatrain))
+        beta_perfect += betatrain
+        i += 1
+
+
+    #print (z_test, z_ALL_pred)
+
+    error = np.mean( np.mean((z_test[:,np.newaxis] - z_ALL_pred)**2, axis=1, keepdims=True) )
+    bias = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
+    variance = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
+
+
+    #print('Polynomial degree:', degree)
+    print('Error:', error)
+    print('Bias^2:', bias)
+    print('Var:', variance)
+    print('{} >= {} + {} = {}'.format(error, bias, variance, bias+variance))
+
+    estimated_MSE = np.mean(scores_MSE)
+
+    return (estimated_MSE, bias, variance, error, (beta_perfect/float(k)))
+def crossvalidation_MSE(x_train, y_train, z_train, k, polygrad, regressiontype = 'OLS',lamb=0):
 
     scores_MSE = np.zeros(k)
     bias = np.zeros(k)
