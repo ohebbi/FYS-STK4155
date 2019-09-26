@@ -12,7 +12,7 @@ import sklearn.linear_model as skl
 from sklearn.model_selection import train_test_split
 
 
-from regression_functions import *
+#from regression_functions import *
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -64,24 +64,22 @@ def terrain_data(plott = True):
     """
 
     #load the terrain
-    terrain1 = imread('SRTM_data_Norway_1.tif')
+    terrain1 = imread('terraintiff.tif')
 
-    x_data = np.arange(0,len(terrain1[0]),1)
-    y_data = np.arange(0,len(terrain1[:,0]),1)
-    z_data = terrain1
-
-
-
-
+    #Reducing the size of the terrain data to improve computation time
+    z_data = terrain1[::4,::4]
+    x_data = np.arange(0,len(z_data[0]),1)
+    y_data = np.arange(0,len(z_data[:,0]),1)
     x, y = np.meshgrid(x_data,y_data)
 
-    print (len(x_data), len(y_data))
     if plott == True:
-        plt.figure()
-        plt.title("Terrain over part of Norway")
-        plt.imshow(terrain1)#,cmap='gray')
+        fig1 = plt.figure()
+        plt.title("Terrain over a part of Norway")
+        image = plt.imshow(z_data)
+        plt.colorbar(image)
         plt.xlabel('X')
         plt.ylabel('Y')
+        plt.savefig("Aktuelt område.png")
         plt.show()
 
     #flatten the matrix out
