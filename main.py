@@ -44,16 +44,16 @@ def main():
     5-fold crossvalidation OLS
     """
     # Polynomial degree
-    t = np.linspace(1,10,10)
+    degrees = np.linspace(1,10,10)
 
-    bias = np.zeros(len(t))
-    variance = np.zeros(len(t))
+    bias = np.zeros(len(degrees))
+    variance = np.zeros(len(degrees))
 
-    test_MSE = np.zeros(len(t))
-    test_R2 = np.zeros(len(t))
+    test_MSE = np.zeros(len(degrees))
+    test_R2 = np.zeros(len(degrees))
 
-    train_MSE = np.zeros(len(t))
-    train_R2 = np.zeros(len(t))
+    train_MSE = np.zeros(len(degrees))
+    train_R2 = np.zeros(len(degrees))
 
     #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
 
@@ -64,7 +64,7 @@ def main():
     """
 
     k = 5 #cross fold
-    for polygrad in t:
+    for polygrad in degrees:
 
         j = int(polygrad) - 1
         scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
@@ -80,9 +80,9 @@ def main():
         #print('Var:', test_variance[j])
         #print('{} >= {} + {} = {}'.format(test_MSE[j],test_bias[j], test_variance[j], test_bias[j]+test_variance[j]))
 
-    plt.plot(t,test_MSE)
-    plt.plot(t,variance)
-    plt.plot(t,bias)
+    plt.plot(degrees,test_MSE)
+    plt.plot(degrees,variance)
+    plt.plot(degrees,bias)
 
     plt.legend(["test_MSE","variance", "bias"])
     plt.title("OLS regression")
@@ -90,8 +90,8 @@ def main():
     plt.ylabel("Error")
     plt.show()
 
-    plt.plot(t,train_MSE)
-    plt.plot(t,test_MSE)
+    plt.plot(degrees,train_MSE)
+    plt.plot(degrees,test_MSE)
     plt.legend(["train_MSE","test_MSE"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
@@ -102,45 +102,38 @@ def main():
     Ridge_regression
     """
     
-    
     """
     First running CV for finding best lambda with lowest MSE.
     """
     
     nlambdas = 10
     lambdas = np.logspace(-3,0,nlambdas)
-
+    
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
-
-    for lamb in tqdm(lambdas):
-        k = 5 #cross fold
-        for polygrad in t:
-
-            j = int(polygrad) - 1
-            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, lamb, regressiontype='Ridge')
-
-            train_MSE[j] = scores[0]
-            train_R2[j] = scores[1]
-
-
-
+    
+    for lamb in lambdas:
+    
+        test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
+    
+    
         c = next(color)
-        plt.plot(t,train_MSE,c=c)
+        plt.plot(degrees,test2_MSE, c=c)
         plt.legend(lambdas)
         plt.xlabel("Complexity of model (the degree of the polynomial)")
         plt.ylabel("Error")
         plt.title("Ridge_MSE for different lambda-values")
     plt.show()
     
-    
     """
-    Then calculate bias-variance with the best lambda. 
+    Then calculate the bias-variance with the best lambda. 
     As an example we now use "best" lambda = 0.001 
     """
+    
+    
     lamb = 0.001
     
-    color=iter(cm.rainbow(np.linspace(1,0,len(t))))
-    for polygrad in t:
+    color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
+    for polygrad in degrees:
         
         j = int(polygrad) - 1
         
@@ -154,7 +147,7 @@ def main():
         variance[j] = scores[4]
 
     c = next(color)
-    plt.plot(t,test_MSE,c=c)
+    plt.plot(degrees,test_MSE,c=c)
     plt.legend(["lamb = 0.001"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
@@ -173,24 +166,24 @@ def main():
     Objective did not converge. You might want to increase the number of iterations. 
     Fitting data with very small alpha may cause precision problems."
     """
+    
+    """
+    First running CV for finding best lambda with lowest MSE.
+    """
+    
     #nlambdas = 4
     #lambdas = np.logspace(-6,-2,nlambdas)
-
+    
+    
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
+    
     for lamb in tqdm(lambdas):
-        k = 5 #cross fold
-        for polygrad in t:
-
-            j = int(polygrad) - 1
-            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, lamb, regressiontype='Lasso')
-
-            train_MSE[j] = scores[0]
-            train_R2[j] = scores[1]
-
-
-
+    
+        test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    
+    
         c = next(color)
-        plt.plot(t,train_MSE,c=c)
+        plt.plot(degrees,test2_MSE, c=c)
         plt.legend(lambdas)
         plt.xlabel("Complexity of model (the degree of the polynomial)")
         plt.ylabel("Error")
@@ -198,15 +191,14 @@ def main():
     plt.show()
     
     
-    
     """
-    Then calculate bias-variance with the best lambda. 
-    As an example we now use "best" lambda = 0.001 
+    Then calculate the bias-variance with the best lambda. 
+    As an example we now use "best" lambda = 0.1 
     """
     lamb = 0.1
     
-    color=iter(cm.rainbow(np.linspace(1,0,len(t))))
-    for polygrad in t:
+    color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
+    for polygrad in degrees:
         
         j = int(polygrad) - 1
         
@@ -220,7 +212,7 @@ def main():
         variance[j] = scores[4]
 
     c = next(color)
-    plt.plot(t,test_MSE,c=c)
+    plt.plot(degrees,test_MSE,c=c)
     plt.legend(["lamb = 0.1"])
     plt.title("Lasso_MSE for best lambda-value")
     plt.xlabel("Complexity of model (the degree of the polynomial)")
