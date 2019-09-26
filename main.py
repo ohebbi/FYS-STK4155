@@ -21,7 +21,6 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 
-from regression_functions import *
 from functions import *
 
 
@@ -44,7 +43,8 @@ def main():
     """
     5-fold crossvalidation OLS
     """
-    t = np.linspace(3,10,8)
+    # Polynomial degree
+    t = np.linspace(1,10,10)
 
     bias = np.zeros(len(t))
     variance = np.zeros(len(t))
@@ -59,10 +59,14 @@ def main():
 
     #    print (x_train)
 
+    """
+    OLS regression
+    """
+
     k = 5 #cross fold
     for polygrad in t:
 
-        j = int(polygrad) - 3
+        j = int(polygrad) - 1
         scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
@@ -81,18 +85,21 @@ def main():
     plt.plot(t,bias)
 
     plt.legend(["test_MSE","variance", "bias"])
+    plt.title("OLS regression")
     plt.show()
 
     plt.plot(t,train_MSE)
     plt.plot(t,test_MSE)
+    plt.legend(["train_MSE","test_MSE"])
+    plt.title("OLS regression")
     plt.show()
 
     """
-    ridge_regression
+    Ridge_regression
     """
 
-    nlambdas = 14
-    lambdas = np.logspace(-3,1,nlambdas)
+    nlambdas = 10
+    lambdas = np.logspace(-3,0,nlambdas)
 
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
 
@@ -100,8 +107,8 @@ def main():
         k = 5 #cross fold
         for polygrad in t:
 
-            j = int(polygrad) - 3
-            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, regressiontype='OLS')
+            j = int(polygrad) - 1
+            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, lamb, regressiontype='Ridge')
 
             train_MSE[j] = scores[0]
             train_R2[j] = scores[1]
@@ -111,8 +118,44 @@ def main():
         c = next(color)
         plt.plot(t,train_MSE,c=c)
         plt.legend(lambdas)
+        plt.title("Ridge_MSE for different lambda-values")
     plt.show()
+    
+    
+    """
+    Lasso_regression
+    """
+    
+    """
+    It doesn't like large lambda values, so try lambda in the magnitude of 10^-6.
+    But be aware that you may get a warning saying you: 
+    "ConvergenceWarning: 
+    Objective did not converge. You might want to increase the number of iterations. 
+    Fitting data with very small alpha may cause precision problems."
+    """
+    #nlambdas = 4
+    #lambdas = np.logspace(-6,-2,nlambdas)
 
+    color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
+    for lamb in tqdm(lambdas):
+        k = 5 #cross fold
+        for polygrad in t:
+
+            j = int(polygrad) - 1
+            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, lamb, regressiontype='Lasso')
+
+            train_MSE[j] = scores[0]
+            train_R2[j] = scores[1]
+
+
+
+        c = next(color)
+        plt.plot(t,train_MSE,c=c)
+        plt.legend(lambdas)
+        plt.title("Lasso_MSE for different lambda-values")
+    plt.show()
+    
+    
     """
     plt.plot(t,train_MSE,'r')
     plt.plot(t,test_MSE,'b')

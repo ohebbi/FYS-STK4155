@@ -12,7 +12,7 @@ import sklearn.linear_model as skl
 from sklearn.model_selection import train_test_split
 
 
-from regression_functions import *
+
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -243,7 +243,7 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
 
 
 
-def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, regressiontype = 'OLS',lamb=0):
+def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, lamb=0, regressiontype = 'OLS'):
 
     p = int(0.5*(polygrad + 2)*(polygrad + 1))
 
