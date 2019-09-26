@@ -86,18 +86,27 @@ def main():
 
     plt.legend(["test_MSE","variance", "bias"])
     plt.title("OLS regression")
+    plt.xlabel("Complexity of model (the degree of the polynomial)")
+    plt.ylabel("Error")
     plt.show()
 
     plt.plot(t,train_MSE)
     plt.plot(t,test_MSE)
     plt.legend(["train_MSE","test_MSE"])
+    plt.xlabel("Complexity of model (the degree of the polynomial)")
+    plt.ylabel("Error")
     plt.title("OLS regression")
     plt.show()
 
     """
     Ridge_regression
     """
-
+    
+    
+    """
+    First running CV for finding best lambda with lowest MSE.
+    """
+    
     nlambdas = 10
     lambdas = np.logspace(-3,0,nlambdas)
 
@@ -118,7 +127,38 @@ def main():
         c = next(color)
         plt.plot(t,train_MSE,c=c)
         plt.legend(lambdas)
+        plt.xlabel("Complexity of model (the degree of the polynomial)")
+        plt.ylabel("Error")
         plt.title("Ridge_MSE for different lambda-values")
+    plt.show()
+    
+    
+    """
+    Then calculate bias-variance with the best lambda. 
+    As an example we now use "best" lambda = 0.001 
+    """
+    lamb = 0.001
+    
+    color=iter(cm.rainbow(np.linspace(1,0,len(t))))
+    for polygrad in t:
+        
+        j = int(polygrad) - 1
+        
+        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Ridge')
+
+        train_MSE[j] = scores[0]
+        train_R2[j] = scores[1]
+        
+        test_MSE[j] = scores[2]
+        bias[j] = scores[3]
+        variance[j] = scores[4]
+
+    c = next(color)
+    plt.plot(t,test_MSE,c=c)
+    plt.legend(["lamb = 0.001"])
+    plt.xlabel("Complexity of model (the degree of the polynomial)")
+    plt.ylabel("Error")
+    plt.title("Ridge_MSE for best lambda-value")
     plt.show()
     
     
@@ -152,8 +192,41 @@ def main():
         c = next(color)
         plt.plot(t,train_MSE,c=c)
         plt.legend(lambdas)
+        plt.xlabel("Complexity of model (the degree of the polynomial)")
+        plt.ylabel("Error")
         plt.title("Lasso_MSE for different lambda-values")
     plt.show()
+    
+    
+    
+    """
+    Then calculate bias-variance with the best lambda. 
+    As an example we now use "best" lambda = 0.001 
+    """
+    lamb = 0.1
+    
+    color=iter(cm.rainbow(np.linspace(1,0,len(t))))
+    for polygrad in t:
+        
+        j = int(polygrad) - 1
+        
+        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Lasso')
+
+        train_MSE[j] = scores[0]
+        train_R2[j] = scores[1]
+        
+        test_MSE[j] = scores[2]
+        bias[j] = scores[3]
+        variance[j] = scores[4]
+
+    c = next(color)
+    plt.plot(t,test_MSE,c=c)
+    plt.legend(["lamb = 0.1"])
+    plt.title("Lasso_MSE for best lambda-value")
+    plt.xlabel("Complexity of model (the degree of the polynomial)")
+    plt.ylabel("Error")
+    plt.show()
+    
     
     
     """

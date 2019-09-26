@@ -243,7 +243,7 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
 
 
 
-def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, lamb=0, regressiontype = 'OLS'):
+def k_fold_cross_validation(x, y, z, k, polygrad, lamb=0, regressiontype = 'OLS'):
 
     p = int(0.5*(polygrad + 2)*(polygrad + 1))
 
@@ -264,14 +264,14 @@ def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, lamb=0, regr
 
     #splitting our training data into training- and validation data
     i =0
-    for train_inds, val_inds in kfold.split(x_train):
-        xtrain = x_train[train_inds]
-        ytrain = y_train[train_inds]
-        ztrain = z_train[train_inds]
+    for train_inds, val_inds in kfold.split(x):
+        xtrain = x[train_inds]
+        ytrain = y[train_inds]
+        ztrain = z[train_inds]
 
-        xval = x_train[val_inds]
-        yval = y_train[val_inds]
-        zval = z_train[val_inds]
+        xval = x[val_inds]
+        yval = y[val_inds]
+        zval = z[val_inds]
 
         #(len(xtrain),len(x), len(xtest))
         Xtrain = find_designmatrix(xtrain,ytrain, polygrad)
@@ -297,7 +297,7 @@ def k_fold_cross_validation(x_train, y_train, z_train, k, polygrad, lamb=0, regr
     estimated_MSE = np.mean(scores_MSE)
     estimated_R2 = np.mean(scores_R2)
     return [estimated_MSE, estimated_R2], betas
-def bias_variance(x,y,z,polygrad,k=5,regressiontype = 'OLS'):
+def bias_variance(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OLS'):
 
     x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
 
