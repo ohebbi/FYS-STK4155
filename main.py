@@ -111,7 +111,7 @@ def main(x,y,z):
 
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
 
-    for lamb in lambdas:
+    for lamb in tqdm(lambdas):
 
         test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
