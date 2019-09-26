@@ -42,9 +42,9 @@ def main():
     #print(ztilde-ztilde_skl)
     #exercise b)
     """
-    5-fold crossvalidation
+    5-fold crossvalidation OLS
     """
-    t = np.linspace(1,10,10)
+    t = np.linspace(3,10,8)
 
     bias = np.zeros(len(t))
     variance = np.zeros(len(t))
@@ -62,7 +62,7 @@ def main():
     k = 5 #cross fold
     for polygrad in t:
 
-        j = int(polygrad) - 1
+        j = int(polygrad) - 3
         scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
@@ -85,6 +85,32 @@ def main():
 
     plt.plot(t,train_MSE)
     plt.plot(t,test_MSE)
+    plt.show()
+
+    """
+    ridge_regression
+    """
+
+    nlambdas = 14
+    lambdas = np.logspace(-3,1,nlambdas)
+
+    color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
+
+    for lamb in tqdm(lambdas):
+        k = 5 #cross fold
+        for polygrad in t:
+
+            j = int(polygrad) - 3
+            scores, betas = k_fold_cross_validation(x,y,z,k,polygrad, regressiontype='OLS')
+
+            train_MSE[j] = scores[0]
+            train_R2[j] = scores[1]
+
+
+
+        c = next(color)
+        plt.plot(t,train_MSE,c=c)
+        plt.legend(lambdas)
     plt.show()
 
     """
@@ -140,89 +166,6 @@ def main():
     plt.plot(t,test_MSE,'b')
     plt.legend(["train MSE","test MSE"])
     plt.show()
-    """
-
-    """
-    Ridge regression
-    """
-
-    """
-    test_MSE_ridge = np.zeros(len(t))
-    test_bias_ridge = np.zeros(len(t))
-    test_variance_ridge = np.zeros(len(t))
-
-    train_MSE_ridge = np.zeros(len(t))
-    train_bias_ridge = np.zeros(len(t))
-    train_variance_ridge = np.zeros(len(t))
-
-    nlambdas = 200
-    lambdas = np.logspace(-3,5,nlambdas)
-
-    color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
-
-    for lamb in tqdm(lambdas):
-        k = 5 #cross fold
-        for polygrad in t:
-
-            j = int(polygrad) - 1
-            train_MSE_ridge[j], train_bias_ridge[j], train_variance_ridge[j], \
-            beta = crossvalidation(x_train,y_train,z_train, k, polygrad, \
-            regressiontype = 'Lasso', lamb=lamb)
-
-            X = find_designmatrix(x_test,y_test, polygrad)
-
-            z_pred = X.dot(beta)
-
-            #scores_R2[j] = R2(z_test, z_pred)
-            test_MSE_ridge[j] = MSE(z_test, z_pred)
-            square = z_test - np.mean(z_pred)
-            test_bias_ridge[j] = np.mean( (square)**2 )
-            test_variance_ridge[j] = np.mean( np.var(z_pred))
-        c = next(color)
-        plt.plot(t,train_MSE_ridge,linewidth=0.8,c=c)
-    #plt.show()
-    """
-
-
-    """
-    plt.plot(t,train_MSE_ridge)
-    plt.plot(t,train_variance_ridge)
-    plt.plot(t,train_bias_ridge)
-    plt.legend(["train MSE","train variance", "train bias"])
-    plt.show()
-    plt.plot(t,test_MSE_ridge)
-    plt.plot(t,test_variance_ridge)
-    plt.plot(t,test_bias_ridge)
-    plt.legend(["test MSE","test variance", "test bias"])
-    plt.show()
-
-    plt.plot(t,train_MSE_ridge,'r')
-    plt.plot(t,test_MSE_ridge,'b')
-    plt.legend(["train MSE","test MSE"])
-    plt.show()
-    """
-    """
-    #exercise c)
-    #K-fold CV lamb=0
-    t = np.linspace(0,19,20)
-    variance, scores_MSE, bias = tester(x_train,y_train,z_train,x_test,y_test,z_test,lamb=0)
-
-    #print("Mean R2 ",scores_R2)
-    print("Mean MSE ",scores_MSE)
-    print("Bias^2", bias)
-    print("Variance", bias)
-
-
-    plt.plot(t,scores_MSE,'y')
-    plt.plot(t,bias, 'b', )
-
-    plt.plot(t,variance,'r')
-
-    #How MSE should look like
-    plt.plot(t,variance+bias)
-    plt.legend(["MSE","Bias^2","Variance"])
-    plt.show()
-
     """
     #exercise d)
     #ridge_regression(x_train, x_test, y_train, y_test,z_train, z_test)
