@@ -253,7 +253,9 @@ def main(x,y,z):
 
     #exercise e)
     #lasso_regression(x_train, x_test, y_train, y_test,z_train, z_test)
-
+"""
+FORDI MOHAMEMD FUKKET OPP
+"""
 
 if __name__ == '__main__':
     x,y,z = generate_data()
