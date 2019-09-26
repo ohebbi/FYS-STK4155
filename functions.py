@@ -67,7 +67,7 @@ def terrain_data(plott = True):
     terrain1 = imread('terraintiff.tif')
 
     #Reducing the size of the terrain data to improve computation time
-    z_data = terrain1[::4,::4]
+    z_data = terrain1[::10,::10]
     x_data = np.arange(0,len(z_data[0]),1)
     y_data = np.arange(0,len(z_data[:,0]),1)
     x, y = np.meshgrid(x_data,y_data)
@@ -87,7 +87,7 @@ def terrain_data(plott = True):
     y = np.ravel(y)
     z = np.ravel(z_data)
 
-    return x, y, z_data
+    return x, y, z
 
 def find_designmatrix(x,y, polygrad=5):
 
@@ -317,23 +317,23 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
-    
+
     test_MSE = np.zeros(len(degrees))
     test_R2 = np.zeros(len(degrees))
-    
-        
-        
+
+
+
     for polygrad in degrees:
-        
+
         j = int(polygrad) - 1
-        
+
         scores, beta = k_fold_cross_validation(x, y, z, polygrad, k, lamb, regressiontype)
 
         test_MSE[j] = scores[0]
         test_R2[j] = scores[1]
-        
-        
-    
+
+
+
     return test_MSE
 """
     c = next(color)
@@ -343,25 +343,25 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
-""" 
+"""
 def Best_Lambda(x, y, z, polygrad, k, lamb, regressiontype='OLS'):
-    
+
     """
-    Then calculate the bias-variance with the best lambda. 
-    As an example we now use "best" lambda = 0.1 
+    Then calculate the bias-variance with the best lambda.
+    As an example we now use "best" lambda = 0.1
     """
     lamb = 0.1
-    
+
     color=iter(cm.rainbow(np.linspace(1,0,len(t))))
     for polygrad in t:
-        
+
         j = int(polygrad) - 1
-        
+
         scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
-        
+
         test_MSE[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
@@ -373,5 +373,3 @@ def Best_Lambda(x, y, z, polygrad, k, lamb, regressiontype='OLS'):
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
-
-

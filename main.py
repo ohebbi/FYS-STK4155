@@ -24,10 +24,10 @@ from tqdm import tqdm
 from functions import *
 
 
-def main():
+def main(x,y,z):
 
     #exercise a)
-    x,y,z = generate_data()
+    #x,y,z = generate_data()
 
     #if overfit: activate next line
     #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
@@ -101,21 +101,21 @@ def main():
     """
     Ridge_regression
     """
-    
+
     """
     First running CV for finding best lambda with lowest MSE.
     """
-    
+
     nlambdas = 10
     lambdas = np.logspace(-3,0,nlambdas)
-    
+
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
-    
+
     for lamb in lambdas:
-    
+
         test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
-    
-    
+
+
         c = next(color)
         plt.plot(degrees,test2_MSE, c=c)
         plt.legend(lambdas)
@@ -123,25 +123,25 @@ def main():
         plt.ylabel("Error")
         plt.title("Ridge_MSE for different lambda-values")
     plt.show()
-    
+
     """
-    Then calculate the bias-variance with the best lambda. 
-    As an example we now use "best" lambda = 0.001 
+    Then calculate the bias-variance with the best lambda.
+    As an example we now use "best" lambda = 0.001
     """
-    
-    
+
+
     lamb = 0.001
-    
+
     color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
     for polygrad in degrees:
-        
+
         j = int(polygrad) - 1
-        
+
         scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Ridge')
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
-        
+
         test_MSE[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
@@ -153,35 +153,35 @@ def main():
     plt.ylabel("Error")
     plt.title("Ridge_MSE for best lambda-value")
     plt.show()
-    
-    
+
+
     """
     Lasso_regression
     """
-    
+
     """
     It doesn't like large lambda values, so try lambda in the magnitude of 10^-6.
-    But be aware that you may get a warning saying you: 
-    "ConvergenceWarning: 
-    Objective did not converge. You might want to increase the number of iterations. 
+    But be aware that you may get a warning saying you:
+    "ConvergenceWarning:
+    Objective did not converge. You might want to increase the number of iterations.
     Fitting data with very small alpha may cause precision problems."
     """
-    
+
     """
     First running CV for finding best lambda with lowest MSE.
     """
-    
+
     #nlambdas = 4
     #lambdas = np.logspace(-6,-2,nlambdas)
-    
-    
+
+
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
-    
+
     for lamb in tqdm(lambdas):
-    
+
         test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Lasso')
-    
-    
+
+
         c = next(color)
         plt.plot(degrees,test2_MSE, c=c)
         plt.legend(lambdas)
@@ -189,24 +189,24 @@ def main():
         plt.ylabel("Error")
         plt.title("Lasso_MSE for different lambda-values")
     plt.show()
-    
-    
+
+
     """
-    Then calculate the bias-variance with the best lambda. 
-    As an example we now use "best" lambda = 0.1 
+    Then calculate the bias-variance with the best lambda.
+    As an example we now use "best" lambda = 0.1
     """
     lamb = 0.1
-    
+
     color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
     for polygrad in degrees:
-        
+
         j = int(polygrad) - 1
-        
+
         scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Lasso')
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
-        
+
         test_MSE[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
@@ -218,9 +218,9 @@ def main():
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
-    
-    
-    
+
+
+
     """
     plt.plot(t,train_MSE,'r')
     plt.plot(t,test_MSE,'b')
@@ -283,4 +283,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    x,y,z = generate_data()
+    main(x,y,z)
+    print("======================================\nTerrain data\n======================================")
+    x,y,z = terrain_data()
+    main(x,y,z)
