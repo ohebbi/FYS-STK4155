@@ -111,7 +111,7 @@ def main(x,y,z):
 
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
 
-    for lamb in lambdas:
+    for lamb in tqdm(lambdas):
 
         test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
@@ -253,9 +253,7 @@ def main(x,y,z):
 
     #exercise e)
     #lasso_regression(x_train, x_test, y_train, y_test,z_train, z_test)
-"""
-FORDI MOHAMEMD FUKKET OPP
-"""
+
 
 if __name__ == '__main__':
     x,y,z = generate_data()
