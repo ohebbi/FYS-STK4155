@@ -46,7 +46,7 @@ def main(x,y,z):
     # Polynomial degree
     degrees = np.linspace(1,10,10)
 
-    bias = np.zeros(len(degrees))
+    bias = np.zeros(len(degrees))   |
     variance = np.zeros(len(degrees))
 
     test_MSE = np.zeros(len(degrees))
