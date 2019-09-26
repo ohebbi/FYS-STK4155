@@ -132,22 +132,9 @@ def main():
     
     lamb = 0.001
     
-    color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
-    for polygrad in degrees:
-        
-        j = int(polygrad) - 1
-        
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Ridge')
+    test3_MSE, Bias, Variance = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
-        train_MSE[j] = scores[0]
-        train_R2[j] = scores[1]
-        
-        test_MSE[j] = scores[2]
-        bias[j] = scores[3]
-        variance[j] = scores[4]
-
-    c = next(color)
-    plt.plot(degrees,test_MSE,c=c)
+    plt.plot(degrees,test_MSE)
     plt.legend(["lamb = 0.001"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
@@ -197,30 +184,16 @@ def main():
     """
     lamb = 0.1
     
-    color=iter(cm.rainbow(np.linspace(1,0,len(degrees))))
-    for polygrad in degrees:
-        
-        j = int(polygrad) - 1
-        
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='Lasso')
-
-        train_MSE[j] = scores[0]
-        train_R2[j] = scores[1]
-        
-        test_MSE[j] = scores[2]
-        bias[j] = scores[3]
-        variance[j] = scores[4]
-
-    c = next(color)
-    plt.plot(degrees,test_MSE,c=c)
+    test3_MSE, Bias, Variance = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    
+    plt.plot(degrees,test3_MSE)
     plt.legend(["lamb = 0.1"])
     plt.title("Lasso_MSE for best lambda-value")
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
     
-    
-    
+      
     """
     plt.plot(t,train_MSE,'r')
     plt.plot(t,test_MSE,'b')

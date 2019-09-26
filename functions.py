@@ -318,10 +318,13 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     
-    test_MSE = np.zeros(len(degrees))
-    test_R2 = np.zeros(len(degrees))
+    """
+    First running CV for finding best lambda with lowest MSE.
+    """
     
-        
+    
+    test_MSE = np.zeros(len(degrees))
+    test_R2 = np.zeros(len(degrees))    
         
     for polygrad in degrees:
         
@@ -335,29 +338,27 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         
     
     return test_MSE
-"""
-    c = next(color)
-    plt.plot(t,test_MSE,c=c)
-    plt.legend(["lamb = 0.1"])
-    plt.title("Lasso_MSE for best lambda-value")
-    plt.xlabel("Complexity of model (the degree of the polynomial)")
-    plt.ylabel("Error")
-    plt.show()
-""" 
-def Best_Lambda(x, y, z, polygrad, k, lamb, regressiontype='OLS'):
+
+
+def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     
     """
     Then calculate the bias-variance with the best lambda. 
     As an example we now use "best" lambda = 0.1 
     """
-    lamb = 0.1
+    train_MSE = np.zeros(len(degrees))
+    train_R2 = np.zeros(len(degrees))
     
-    color=iter(cm.rainbow(np.linspace(1,0,len(t))))
-    for polygrad in t:
+    test_MSE = np.zeros(len(degrees))
+    test_R2 = np.zeros(len(degrees)) 
+    bias = np.zeros(len(degrees))
+    variance = np.zeros(len(degrees))
+
+    for polygrad in degrees:
         
         j = int(polygrad) - 1
         
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype='OLS')
+        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
@@ -366,12 +367,6 @@ def Best_Lambda(x, y, z, polygrad, k, lamb, regressiontype='OLS'):
         bias[j] = scores[3]
         variance[j] = scores[4]
 
-    c = next(color)
-    plt.plot(t,test_MSE,c=c)
-    plt.legend(["lamb = 0.1"])
-    plt.title("Lasso_MSE for best lambda-value")
-    plt.xlabel("Complexity of model (the degree of the polynomial)")
-    plt.ylabel("Error")
-    plt.show()
+    return test_MSE, bias, variance
 
 
