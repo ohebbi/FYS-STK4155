@@ -52,7 +52,7 @@ def generate_data(plott = False):
     z = np.ravel(z)
 
     eps = np.random.normal(0,1,len(z))
-    z += 0.1*eps
+    z += 0.*eps
 
     return x, y, z
     #print (x_train)
