@@ -67,7 +67,7 @@ def terrain_data(plott = True):
     terrain1 = imread('terraintiff.tif')
 
     #Reducing the size of the terrain data to improve computation time
-    z_data = terrain1[::10,::10]
+    z_data = terrain1[::30,::30]
     x_data = np.arange(0,len(z_data[0]),1)
     y_data = np.arange(0,len(z_data[:,0]),1)
     x, y = np.meshgrid(x_data,y_data)
@@ -165,7 +165,7 @@ def ridge_regression(X,z,lamb):
     return beta
 
 def lasso_regression(X,z,lamb):
-    clf = Lasso(alpha=lamb)
+    clf = Lasso(alpha=lamb, tol = 1)
     clf.fit(X,z)
     return (clf.coef_)
 
