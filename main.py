@@ -49,7 +49,7 @@ def main(x,y,z):
     bias = np.zeros(len(degrees))
     variance = np.zeros(len(degrees))
 
-    test_MSE = np.zeros(len(degrees))
+    test_MSE_OLS = np.zeros(len(degrees))
     test_R2 = np.zeros(len(degrees))
 
     train_MSE = np.zeros(len(degrees))
@@ -67,12 +67,12 @@ def main(x,y,z):
     for polygrad in degrees:
 
         j = int(polygrad) - 1
-        scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
+        scores, betas = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
 
-        test_MSE[j] = scores[2]
+        test_MSE_OLS[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
 
@@ -80,7 +80,7 @@ def main(x,y,z):
         #print('Var:', test_variance[j])
         #print('{} >= {} + {} = {}'.format(test_MSE[j],test_bias[j], test_variance[j], test_bias[j]+test_variance[j]))
 
-    plt.plot(degrees,test_MSE)
+    plt.plot(degrees,test_MSE_OLS)
     plt.plot(degrees,variance)
     plt.plot(degrees,bias)
 
@@ -91,7 +91,7 @@ def main(x,y,z):
     plt.show()
 
     plt.plot(degrees,train_MSE)
-    plt.plot(degrees,test_MSE)
+    plt.plot(degrees,test_MSE_OLS)
     plt.legend(["train_MSE","test_MSE"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
@@ -111,13 +111,12 @@ def main(x,y,z):
 
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
 
-    for lamb in tqdm(lambdas):
+    for lamb in lambdas:
 
-        test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
-
+        test_MSE_Ridge = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
         c = next(color)
-        plt.plot(degrees,test2_MSE, c=c)
+        plt.plot(degrees,test_MSE_Ridge, c=c)
         plt.legend(lambdas)
         plt.xlabel("Complexity of model (the degree of the polynomial)")
         plt.ylabel("Error")
@@ -132,9 +131,9 @@ def main(x,y,z):
 
     lamb = 0.001
 
-    test3_MSE, Bias, Variance = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
+    test_MSE_Ridge, Bias, Variance, betas = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
-    plt.plot(degrees,test_MSE)
+    plt.plot(degrees,test_MSE_Ridge)
     plt.legend(["lamb = 0.001"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
@@ -166,11 +165,11 @@ def main(x,y,z):
 
     for lamb in tqdm(lambdas):
 
-        test2_MSE = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+        test_MSE_LASSO= Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Lasso')
 
 
         c = next(color)
-        plt.plot(degrees,test2_MSE, c=c)
+        plt.plot(degrees,test_MSE_LASSO, c=c)
         plt.legend(lambdas)
         plt.xlabel("Complexity of model (the degree of the polynomial)")
         plt.ylabel("Error")
@@ -184,9 +183,9 @@ def main(x,y,z):
     """
     lamb = 0.1
 
-    test3_MSE, Bias, Variance = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    test_MSE_LASSO, Bias, Variance, betas = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
 
-    plt.plot(degrees,test3_MSE)
+    plt.plot(degrees,test_MSE_LASSO)
     plt.legend(["lamb = 0.1"])
     plt.title("Lasso_MSE for best lambda-value")
     plt.xlabel("Complexity of model (the degree of the polynomial)")

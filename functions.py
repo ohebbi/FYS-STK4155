@@ -145,7 +145,7 @@ def MSE(z_data,z_model):
         summ += (z_data[i] - z_model[i])**2
     return summ/(len(z_data))
 
-#We are approximating sigma to be equal MSE
+#We are approximating variance to be equal MSE
 def confidence_interval(beta, MSE):
     sigma = np.sqrt(MSE)
     mean_beta = 0
@@ -313,7 +313,7 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
 
-    return [MSE_train,R2_train, MSE_test, bias_test, variance_test]
+    return [MSE_train,R2_train, MSE_test, bias_test, variance_test], betas
 
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
@@ -334,8 +334,6 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         test_MSE[j] = scores[0]
         test_R2[j] = scores[1]
-
-
 
     return test_MSE
 
@@ -358,7 +356,7 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         j = int(polygrad) - 1
 
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
+        scores, betas = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
@@ -367,4 +365,4 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         bias[j] = scores[3]
         variance[j] = scores[4]
 
-    return test_MSE, bias, variance
+    return test_MSE, bias, variance, betas
