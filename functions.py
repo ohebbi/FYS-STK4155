@@ -219,8 +219,6 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
         beta_perfect += betatrain
         i += 1
 
-    print (z_ALL_pred)
-    print (np.mean(z_ALL_pred,axis=1,keepdims=True))
 
 
     error = np.mean( np.mean((z_test[:,np.newaxis] - z_ALL_pred)**2, axis=1, keepdims=True) )
@@ -244,11 +242,8 @@ def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygr
 def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OLS'):
 
     p = int(0.5*(polygrad + 2)*(polygrad + 1))
+    train_MSE = np.zeros(k)
 
-    scores_MSE = np.zeros(k)
-
-    bias = np.zeros(k)
-    variance = np.zeros(k)
     scores_R2 = np.zeros(k)
     betas = np.zeros((p,k))
 
@@ -283,18 +278,21 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
         else:
             raise ValueError ("regression-type is lacking input!")
 
+
         Xval = find_designmatrix(xval,yval,polygrad)
         zpred = Xval @ betatrain
 
-        scores_MSE[i] =  MSE(zval,zpred)
+        #training data
+        z_train = Xtrain @ betatrain
+
+        train_MSE[i] =  MSE(ztrain,z_train)
         scores_R2[i] = R2(zval,zpred)
         #print (len(beta_perfect), len(betatrain))
         betas[:,i] = betatrain
         i += 1
-
-    estimated_MSE = np.mean(scores_MSE)
+    train_MSE = np.mean(train_MSE)
     estimated_R2 = np.mean(scores_R2)
-    return [estimated_MSE, estimated_R2], betas
+    return [train_MSE, estimated_R2], betas
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
@@ -306,7 +304,6 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
     X_test = find_designmatrix(x_test, y_test, polygrad=polygrad)
     z_pred = X_test @ betas
-
     z_test = np.reshape(z_test,(len(z_test),1))
 
     MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
@@ -356,8 +353,10 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         j = int(polygrad) - 1
 
-        scores, betas = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
+        scores, beta = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
+
+        #print (beta)
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
 
@@ -365,4 +364,4 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         bias[j] = scores[3]
         variance[j] = scores[4]
 
-    return test_MSE, bias, variance, betas
+    return test_MSE, bias, variance, beta
