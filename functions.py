@@ -11,9 +11,6 @@ import sklearn.linear_model as skl
 
 from sklearn.model_selection import train_test_split
 
-
-
-
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
     term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
@@ -56,7 +53,6 @@ def generate_data(plott = False):
 
     return x, y, z
     #print (x_train)
-
 
 def terrain_data(plott = True):
     """
@@ -168,7 +164,6 @@ def lasso_regression(X,z,lamb):
     clf = Lasso(alpha=lamb, tol = 1)
     clf.fit(X,z)
     return (clf.coef_)
-
 def crossvalidation(x_train, y_train, z_train, x_test, y_test, z_test, k, polygrad, regressiontype = 'OLS',lamb=0):
 
     scores_MSE = np.zeros(k)
@@ -293,6 +288,50 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
     train_MSE = np.mean(train_MSE)
     estimated_R2 = np.mean(scores_R2)
     return [train_MSE, estimated_R2], betas
+
+def bootstrap(x,y,z,degrees,regressiontype):
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.pipeline import make_pipeline
+    from sklearn.utils import resample
+    n_bootstrap = 100
+    maxdegree = int(degrees[-1])
+    print(maxdegree)
+    error_test = np.zeros(maxdegree)
+    error_train = np.zeros(maxdegree)
+    bias =  np.zeros(maxdegree)
+    variance =  np.zeros(maxdegree)
+    polydegree =  np.zeros(maxdegree)
+    x_train, x_test, y_train, y_test, z_train, z_test = train_test_split(x,y,z,test_size  = 0.2)
+
+    for degree in degrees:
+
+        z_ALL_pred = np.empty((z_test.shape[0],n_bootstrap))
+
+        for i in range(n_bootstrap):
+
+            x_,y_,z_ = resample(x_train,y_train,z_train)
+
+            Xtrain = find_designmatrix(x_,y_, degree)
+
+            if regressiontype == 'OLS':
+                betatrain = OLS(Xtrain,z_)
+            elif regressiontype == 'Ridge':
+                betatrain = ridge_regression(Xtrain, z_)
+            elif regressiontype == 'Lasso':
+                betatrain = lasso_regression(Xtrain, z_)
+            else:
+                raise ValueError ("regression-type is lacking input!")
+
+            Xtest = find_designmatrix(x_test,y_test,degree)
+
+            z_ALL_pred[:, i] = (Xtest @ betatrain).ravel()
+
+        #print (z_train)
+        z_test = np.reshape(z_test,(len(z_test),1))
+
+        error_test[int(degree)-1] = np.mean( np.mean( ( z_test - z_ALL_pred)**2,axis=1,keepdims=True) )
+
+    return error_test
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 

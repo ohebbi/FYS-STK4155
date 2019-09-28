@@ -113,7 +113,7 @@ def main(x,y,z):
 
     for lamb in lambdas:
 
-        test_MSE_Ridge = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
+        test_MSE_Ridge = Different_Lambdas(x, y, z, degrees, np.zeros(maxdegree), k, lamb, regressiontype='Ridge')
 
         c = next(color)
         plt.plot(degrees,test_MSE_Ridge, c=c)
@@ -153,7 +153,7 @@ def main(x,y,z):
     Fitting data with very small alpha may cause precision problems."
     """
 
-    """
+    """ np.zeros(maxdegree)
     First running CV for finding best lambda with lowest MSE.
     """
 
@@ -252,11 +252,16 @@ def main(x,y,z):
 
     #exercise e)
     #lasso_regression(x_train, x_test, y_train, y_test,z_train, z_test)
-
+def bootstrap_main(x,y,z):
+    degrees = np.linspace(1,12,12)
+    error_test = bootstrap(x,y,z,degrees,"OLS")
+    plt.plot(degrees,error_test)
+    plt.show()
 
 if __name__ == '__main__':
     x,y,z = generate_data()
-    main(x,y,z)
-    print("======================================\nTerrain data\n======================================")
-    x,y,z = terrain_data()
-    main(x,y,z)
+    bootstrap_main(x,y,z)
+    #main(x,y,z)
+    #print("======================================\nTerrain data\n======================================")
+    #x,y,z = terrain_data()
+    #main(x,y,z)
