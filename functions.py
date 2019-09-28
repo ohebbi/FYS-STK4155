@@ -220,11 +220,10 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
     estimated_R2 = np.mean(scores_R2)
     return [train_MSE, estimated_R2], betas
 
-def bootstrap(x,y,z,degrees,regressiontype):
+def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     from sklearn.preprocessing import PolynomialFeatures
     from sklearn.pipeline import make_pipeline
     from sklearn.utils import resample
-    n_bootstrap = 100
     maxdegree = int(degrees[-1])
     print(maxdegree)
     error_test = np.zeros(maxdegree)
@@ -237,6 +236,8 @@ def bootstrap(x,y,z,degrees,regressiontype):
     for degree in degrees:
 
         z_ALL_pred = np.empty((z_test.shape[0],n_bootstrap))
+        X_test = find_designmatrix(x_test, y_test, polygrad=degree)
+
 
         for i in range(n_bootstrap):
 
@@ -253,15 +254,15 @@ def bootstrap(x,y,z,degrees,regressiontype):
             else:
                 raise ValueError ("regression-type is lacking input!")
 
-            Xtest = find_designmatrix(x_test,y_test,degree)
-
             z_ALL_pred[:, i] = (Xtest @ betatrain).ravel()
 
         #print (z_train)
         z_test = np.reshape(z_test,(len(z_test),1))
 
         error_test[int(degree)-1] = np.mean( np.mean( ( z_test - z_ALL_pred)**2,axis=1,keepdims=True) )
-
+        mse[int(degree)-1] = np.mean( np.mean((z_test - z_ALL_pred)**2, axis=1, keepdims=True) )
+        bias[int(degree)-1] = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
+        variance[int(degree)-1] = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
     return error_test
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):

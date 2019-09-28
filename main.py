@@ -68,7 +68,6 @@ def main(x,y,z):
 
         j = int(polygrad) - 1
         scores, betas = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
-
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
 
@@ -113,7 +112,7 @@ def main(x,y,z):
 
     for lamb in lambdas:
 
-        test_MSE_Ridge = Different_Lambdas(x, y, z, degrees, np.zeros(maxdegree), k, lamb, regressiontype='Ridge')
+        test_MSE_Ridge = Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
         c = next(color)
         plt.plot(degrees,test_MSE_Ridge, c=c)
@@ -153,7 +152,7 @@ def main(x,y,z):
     Fitting data with very small alpha may cause precision problems."
     """
 
-    """ np.zeros(maxdegree)
+    """
     First running CV for finding best lambda with lowest MSE.
     """
 
@@ -255,13 +254,15 @@ def main(x,y,z):
 def bootstrap_main(x,y,z):
     degrees = np.linspace(1,12,12)
     error_test = bootstrap(x,y,z,degrees,"OLS")
+    print (error_test)
     plt.plot(degrees,error_test)
     plt.show()
 
 if __name__ == '__main__':
     x,y,z = generate_data()
-    bootstrap_main(x,y,z)
-    #main(x,y,z)
+    main(x,y,z)
+    #bootstrap_main(x,y,z)
+
     #print("======================================\nTerrain data\n======================================")
     #x,y,z = terrain_data()
     #main(x,y,z)
