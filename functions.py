@@ -145,7 +145,7 @@ def MSE(z_data,z_model):
 def confidence_interval(beta, MSE):
     sigma = np.sqrt(MSE)
     mean_beta = 0
-    
+
     for i in beta:
         mean_beta += i
     #print ("confidence interval is from %2.4f to %2.4f." %
@@ -176,7 +176,7 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
 
     scores_R2 = np.zeros(k)
     betas = np.zeros((p,k))
-    
+
     # Finding the Confidence Interval of the betas
     beta_CI = np.zeros(p)
 
@@ -198,7 +198,7 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
         xval = x[val_inds]
         yval = y[val_inds]
         zval = z[val_inds]
-        
+
 
         #(len(xtrain),len(x), len(xtest))
         Xtrain = find_designmatrix(xtrain,ytrain, polygrad)
@@ -221,20 +221,20 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
 
         train_MSE[i] =  MSE(ztrain,z_train)
         scores_R2[i] = R2(zval,zpred)
-        
+
         # Storing all the betas
         betas[:,i] = betatrain
-        
+
         # Finding Confidence Interval of the beta
         beta_CI += betatrain
-        
+
         i += 1
     train_MSE = np.mean(train_MSE)
     estimated_R2 = np.mean(scores_R2)
-    
+
     if get_CI == True:
         return [train_MSE, estimated_R2], betas, beta_CI/k
-    
+
     else:
         return [train_MSE, estimated_R2], betas
 
@@ -278,10 +278,9 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
         z_test = np.reshape(z_test,(len(z_test),1))
 
         error_test[int(degree)-1] = np.mean( np.mean( ( z_test - z_ALL_pred)**2,axis=1,keepdims=True) )
-        mse[int(degree)-1] = np.mean( np.mean((z_test - z_ALL_pred)**2, axis=1, keepdims=True) )
         bias[int(degree)-1] = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
         variance[int(degree)-1] = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
-    return error_test,
+    return [error_test, bias, variance]
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
@@ -298,7 +297,7 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
     bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
-    
+
     CI = confidence_interval(beta_CI, MSE_test)
     return [MSE_train,R2_train, MSE_test, bias_test, variance_test, CI], betas
 
