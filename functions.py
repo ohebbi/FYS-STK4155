@@ -316,10 +316,10 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         j = int(polygrad) - 1
 
-        scores, beta = k_fold_cross_validation(x, y, z, polygrad, k, lamb, regressiontype)
+        scores, beta = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
-        test_MSE[j] = scores[0]
-        test_R2[j] = scores[1]
+        test_MSE[j] = scores[2]
+        #test_R2[j] = scores[1]
 
     return test_MSE
 

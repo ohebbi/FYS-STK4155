@@ -129,12 +129,12 @@ def main(x,y,z):
     """
 
 
-    lamb = 0.001
+    lamb = 0.1
 
     test_MSE_Ridge, Bias, Variance, betas = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
     plt.plot(degrees,test_MSE_Ridge)
-    plt.legend(["lamb = 0.001"])
+    plt.legend(["lamb = "])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.title("Ridge_MSE for best lambda-value")
@@ -157,15 +157,15 @@ def main(x,y,z):
     First running CV for finding best lambda with lowest MSE.
     """
 
-    #nlambdas = 4
-    #lambdas = np.logspace(-6,-2,nlambdas)
+    nlambdas = 10
+    lambdas = np.logspace(-6,-3,nlambdas)
 
 
     color=iter(cm.rainbow(np.linspace(1,0,nlambdas)))
 
-    for lamb in tqdm(lambdas):
+    for lam in tqdm(lambdas):
 
-        test_MSE_LASSO= Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+        test_MSE_LASSO= Different_Lambdas(x, y, z, degrees, k, lam, regressiontype='Lasso')
 
 
         c = next(color)
@@ -181,12 +181,12 @@ def main(x,y,z):
     Then calculate the bias-variance with the best lambda.
     As an example we now use "best" lambda = 0.1
     """
-    lamb = 0.1
+    lambs = 10**(-6)
 
-    test_MSE_LASSO, Bias, Variance, betas = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    test_MSE_LASSO, Bias, Variance, betas = Best_Lambda(x, y, z, degrees, k, lambs, regressiontype='Lasso')
 
     plt.plot(degrees,test_MSE_LASSO)
-    plt.legend(["lamb = 0.1"])
+    plt.legend(["lamb = "])
     plt.title("Lasso_MSE for best lambda-value")
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
