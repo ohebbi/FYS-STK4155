@@ -227,7 +227,7 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     maxdegree = int(degrees[-1])
     print(maxdegree)
     error_test = np.zeros(maxdegree)
-    error_train = np.zeros(maxdegree)
+    mse = np.zeros(maxdegree)
     bias =  np.zeros(maxdegree)
     variance =  np.zeros(maxdegree)
     polydegree =  np.zeros(maxdegree)
@@ -254,7 +254,7 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
             else:
                 raise ValueError ("regression-type is lacking input!")
 
-            z_ALL_pred[:, i] = (Xtest @ betatrain).ravel()
+            z_ALL_pred[:, i] = (X_test @ betatrain).ravel()
 
         #print (z_train)
         z_test = np.reshape(z_test,(len(z_test),1))
