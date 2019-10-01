@@ -263,7 +263,7 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
         mse[int(degree)-1] = np.mean( np.mean((z_test - z_ALL_pred)**2, axis=1, keepdims=True) )
         bias[int(degree)-1] = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
         variance[int(degree)-1] = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
-    return error_test
+    return error_test,
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
