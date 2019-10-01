@@ -264,6 +264,6 @@ if __name__ == '__main__':
     main(x,y,z)
     #bootstrap_main(x,y,z)
 
-    #print("======================================\nTerrain data\n======================================")
-    #x,y,z = terrain_data()
-    #main(x,y,z)
+    print("======================================\nTerrain data\n======================================")
+    x,y,z = terrain_data()
+    main(x,y,z)
