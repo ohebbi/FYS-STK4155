@@ -62,23 +62,29 @@ def main(x,y,z):
     """
     OLS regression
     """
-
     k = 5 #cross fold
+    CI = np.zeros((len(degrees),3))
     for polygrad in degrees:
 
         j = int(polygrad) - 1
         scores, betas = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
+
         train_MSE[j] = scores[0]
         train_R2[j] = scores[1]
 
         test_MSE_OLS[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
-
+        CI[j]=scores[5]
         #print('Bias^2:', test_bias[j])
         #print('Var:', test_variance[j])
         #print('{} >= {} + {} = {}'.format(test_MSE[j],test_bias[j], test_variance[j], test_bias[j]+test_variance[j]))
 
+    plt.plot(degrees,CI[:,0])
+    plt.plot(degrees,CI[:,1])
+    plt.plot(degrees,CI[:,2])
+    plt.legend(["lowest CI","mean beta", "highest beta"])
+    plt.show()
     plt.plot(degrees,test_MSE_OLS)
     plt.plot(degrees,variance)
     plt.plot(degrees,bias)

@@ -145,10 +145,14 @@ def MSE(z_data,z_model):
 def confidence_interval(beta, MSE):
     sigma = np.sqrt(MSE)
     mean_beta = 0
+    
     for i in beta:
         mean_beta += i
-    print ("confidence interval is from %2.4f to %2.4f." %
-            (mean_beta-sigma*1.96, mean_beta+sigma*1.96))
+    #print ("confidence interval is from %2.4f to %2.4f." %
+    #        (mean_beta-sigma*1.96, mean_beta+sigma*1.96))
+    beta_low = np.mean(beta)-sigma*1.96
+    beta_high = np.mean(beta)+sigma*1.96
+    return [beta_low, np.mean(beta), beta_high]
 
 def OLS(X,z):
 
@@ -165,13 +169,16 @@ def lasso_regression(X,z,lamb):
     clf.fit(X,z)
     return (clf.coef_)
 
-def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OLS'):
+def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OLS', get_CI = False):
 
     p = int(0.5*(polygrad + 2)*(polygrad + 1))
     train_MSE = np.zeros(k)
 
     scores_R2 = np.zeros(k)
     betas = np.zeros((p,k))
+    
+    # Finding the Confidence Interval of the betas
+    beta_CI = np.zeros(p)
 
     #finding correct length of beta with the beautiful dummy variabe
     """
@@ -191,6 +198,7 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
         xval = x[val_inds]
         yval = y[val_inds]
         zval = z[val_inds]
+        
 
         #(len(xtrain),len(x), len(xtest))
         Xtrain = find_designmatrix(xtrain,ytrain, polygrad)
@@ -213,12 +221,22 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
 
         train_MSE[i] =  MSE(ztrain,z_train)
         scores_R2[i] = R2(zval,zpred)
-        #print (len(beta_perfect), len(betatrain))
+        
+        # Storing all the betas
         betas[:,i] = betatrain
+        
+        # Finding Confidence Interval of the beta
+        beta_CI += betatrain
+        
         i += 1
     train_MSE = np.mean(train_MSE)
     estimated_R2 = np.mean(scores_R2)
-    return [train_MSE, estimated_R2], betas
+    
+    if get_CI == True:
+        return [train_MSE, estimated_R2], betas, beta_CI/k
+    
+    else:
+        return [train_MSE, estimated_R2], betas
 
 def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     from sklearn.preprocessing import PolynomialFeatures
@@ -269,7 +287,7 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
     x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
 
-    scores, betas = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype)
+    scores, betas, beta_CI = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
     MSE_train = scores[0]
     R2_train = scores[1]
 
@@ -280,8 +298,9 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
     bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
-
-    return [MSE_train,R2_train, MSE_test, bias_test, variance_test], betas
+    
+    CI = confidence_interval(beta_CI, MSE_test)
+    return [MSE_train,R2_train, MSE_test, bias_test, variance_test, CI], betas
 
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
