@@ -70,7 +70,7 @@ def main(x,y,z):
         scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
-        train_R2[j] = scores[1]
+        test_R2[j] = scores[1]
 
         test_MSE_OLS[j] = scores[2]
         bias[j] = scores[3]
@@ -85,7 +85,7 @@ def main(x,y,z):
     plt.plot(degrees,bias)
 
     plt.legend(["test_MSE","variance", "bias"])
-    plt.title("OLS regression")
+    plt.title("OLS regression Bias-Variance Tradeoff")
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
@@ -95,7 +95,14 @@ def main(x,y,z):
     plt.legend(["train_MSE","test_MSE"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
-    plt.title("OLS regression")
+    plt.title("OLS regression MSE")
+    plt.show()
+    
+    plt.plot(degrees,test_R2)
+    plt.legend(["test_R2"])
+    plt.xlabel("Complexity of model (the degree of the polynomial)")
+    plt.ylabel("Error")
+    plt.title("OLS regression R2-score")
     plt.show()
 
     """
@@ -182,7 +189,7 @@ def main(x,y,z):
     """
     lamb = 0.1
 
-    test_MSE_LASSO, Bias, Variance = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    test_MSE_LASSO, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
 
     plt.plot(degrees,test_MSE_LASSO)
     plt.legend(["lamb = 0.1"])
@@ -263,6 +270,6 @@ if __name__ == '__main__':
     main(x,y,z)
     #bootstrap_main(x,y,z)
 
-    #print("======================================\nTerrain data\n======================================")
-    #x,y,z = terrain_data(skip_nr_points=50)
-    #main(x,y,z)
+    print("======================================\nTerrain data\n======================================")
+    x,y,z = terrain_data(skip_nr_points=10)
+    main(x,y,z)
