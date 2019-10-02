@@ -154,14 +154,36 @@ def confidence_interval(beta, MSE):
     beta_high = np.mean(beta)+sigma*1.96
     return [beta_low, np.mean(beta), beta_high]
 
-def OLS(X,z):
+def SVDinv(A):
+    ''' Takes as input a numpy matrix A and returns inv(A) based on singular value decomposition (SVD).
+    SVD is numerically more stable than the inversion algorithms provided by
+    numpy and scipy.linalg at the cost of being slower.
+    '''
+    U, s, VT = np.linalg.svd(A)
+    
 
-    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
+    D = np.zeros((len(U),len(VT)))
+    for i in range(0,len(VT)):
+        D[i,i]=s[i]
+    UT = np.transpose(U); V = np.transpose(VT); invD = np.linalg.inv(D)
+    return np.matmul(V,np.matmul(invD,UT))
+
+
+
+def OLS(X,z):
+    #beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
+    A = X.T.dot(X)
+    C = SVDinv(A)
+    beta = C.dot(X.T).dot(z)
+    
     return beta
 
 def ridge_regression(X,z,lamb):
-
-    beta = np.linalg.inv(X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))).dot(X.T).dot(z)
+    #beta = np.linalg.inv(X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))).dot(X.T).dot(z)
+    
+    A = X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))
+    C = SVDinv(A)
+    beta = C.dot(X.T).dot(z)
     return beta
 
 def lasso_regression(X,z,lamb):
@@ -355,3 +377,9 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         variance[j] = scores[4]
 
     return test_MSE, bias, variance, beta
+
+
+
+
+
+

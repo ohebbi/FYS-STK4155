@@ -44,7 +44,7 @@ def main(x,y,z):
     5-fold crossvalidation OLS
     """
     # Polynomial degree
-    degrees = np.linspace(1,10,10)
+    degrees = np.linspace(1,14,14)
 
     bias = np.zeros(len(degrees))
     variance = np.zeros(len(degrees))
