@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from imageio import imread
-from sklearn.linear_model import Ridge, LinearRegression, Lasso, Ridge
+from sklearn.linear_model import Ridge, LinearRegression, Lasso
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
 import sklearn.linear_model as skl
@@ -161,38 +161,101 @@ def confidence_interval(beta, MSE):
     beta_low = np.mean(beta)-sigma*1.96
     beta_high = np.mean(beta)+sigma*1.96
     return [beta_low, np.mean(beta), beta_high]
+def SVDinv(A):
+    """
+    Function:
+    This function inverts matrixes using singular value dcomposition (SVD).
 
-def OLS(X,z):
+    Input:
+    Takes a matrix A.
 
-    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
+    Output:
+    Returns a matrix.
+    """
+    U, s, VT = np.linalg.svd(A)
+
+    D = np.zeros((len(U),len(VT)))
+    for i in range(0,len(VT)):
+        D[i,i]=s[i]
+    UT = np.transpose(U); V = np.transpose(VT); invD = np.linalg.inv(D)
+    return np.matmul(V,np.matmul(invD,UT))
+
+def OLS(X,z,inversion='SVD'):
+    """
+    Function:
+    This is a solver for the ordinary least square method. Choose SVD for
+    numerical stability or choose normal inversion for faster computation.
+
+    Input:
+    Takes a design matrix as X, a target-vector as z and inversion type.
+
+    Output:
+    Returns the solution array beta of the ordinary least square method.
+    """
+    if inversion=='normal':
+        beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z)
+    elif inversion=='SVD':
+        A = X.T.dot(X)
+        C = SVDinv(A)
+        beta = C.dot(X.T).dot(z)
     return beta
 
-def ridge_regression(X,z,lamb):
+def ridge_regression(X,z,lamb,inversion='SVD'):
+    """
+    Function:
+    This is a solver using Ridge regression. Choose SVD for
+    numerical stability or choose normal inversion for faster computation.
 
-    beta = np.linalg.inv(X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))).dot(X.T).dot(z)
+    Input:
+    Takes a design matrix as X, a target-vector as z, a hyperparameter
+    (constant) lambda and a inversion type.
+
+
+    Output:
+    Returns the array solution beta of the Ridge regression.
+    """
+    if inversion == 'normal':
+        beta = np.linalg.inv(X.T.dot(X) + lamb*np.identity(len(X.T.dot(X)))).dot(X.T).dot(z)
+    elif inversion == 'SVD':
+        A = (X.T.dot(X) + lamb*np.identity(len(X.T.dot(X))))
+        C = SVDinv(A)
+        beta = C.dot(X.T).dot(z)
     return beta
 
 def lasso_regression(X,z,lamb):
-    clf = Lasso(alpha=lamb, tol = 1)
+    """
+    Function:
+    This is a solver using LASSO regression using the module sklearn.
+
+    Input:
+    Takes a design matrix as X, a target-vector as z and a hyperparameter
+    (constant) lambda.
+
+    Output:
+    Returns the array solution beta of the LASSO regression.
+    """
+    clf = Lasso(alpha=lamb)
     clf.fit(X,z)
     return (clf.coef_)
 
 def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OLS', get_CI = False):
+    """
+    Function:
+    This is a resample-technique based on the k-fold cross-validation.
 
+    Input:
+    Takes array input x,y and z as datapoints, the polynomial degree polygrad,
+    number of k-fold cross-validation,hyperparameter lamb, a regressiontype,
+    and confidence interval of beta.
+
+    Output:
+    Returns an array of mse and an array of R2-scores for the training data,
+    a matrix with beta values for each k-fold, and a vector with mean beta-
+    values.
+    """
     p = int(0.5*(polygrad + 2)*(polygrad + 1))
     train_MSE = np.zeros(k)
-
-    scores_R2 = np.zeros(k)
     betas = np.zeros((p,k))
-
-    # Finding the Confidence Interval of the betas
-    beta_CI = np.zeros(p)
-
-    #finding correct length of beta with the beautiful dummy variabe
-    """
-    dummy_variable = find_designmatrix(np.zeros(1),np.zeros(1),polygrad)
-    beta_perfect = np.zeros(len(dummy_variable[0]))
-    """
 
     kfold = KFold(n_splits = k, shuffle=True)
 
@@ -228,30 +291,33 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
         z_train = Xtrain @ betatrain
 
         train_MSE[i] =  MSE(ztrain,z_train)
-        scores_R2[i] = R2(zval,zpred)
 
         # Storing all the betas
         betas[:,i] = betatrain
 
-        # Finding Confidence Interval of the beta
-        beta_CI += betatrain
-
         i += 1
+
     train_MSE = np.mean(train_MSE)
-    estimated_R2 = np.mean(scores_R2)
+    return [train_MSE], betas
 
-    if get_CI == True:
-        return [train_MSE, estimated_R2], betas, beta_CI/k
-
-    else:
-        return [train_MSE, estimated_R2], betas
 
 def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
+    """
+    Function:
+    This is a resample-technique based on the bootstrap method.
+
+    Input:
+    Takes array input x,y and z as datapoints, the polynomial degree interval of
+    array degrees, a regressiontype and the number of bootstraps.
+
+    Output:
+    Returns an array of mean square error, the bias, and the variance of the
+    test data.
+    """
     from sklearn.preprocessing import PolynomialFeatures
     from sklearn.pipeline import make_pipeline
     from sklearn.utils import resample
     maxdegree = int(degrees[-1])
-    print(maxdegree)
     error_test = np.zeros(maxdegree)
     mse = np.zeros(maxdegree)
     bias =  np.zeros(maxdegree)
@@ -294,20 +360,21 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
     x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
 
-    scores, betas, beta_CI = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
+    scores, betas = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
     MSE_train = scores[0]
-    R2_train = scores[1]
 
     X_test = find_designmatrix(x_test, y_test, polygrad=polygrad)
     z_pred = X_test @ betas
     z_test = np.reshape(z_test,(len(z_test),1))
 
+    #Calculating different value.
     MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
     bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
+    R2_test = R2(z_test,np.mean(z_pred,axis=1,keepdims=True))
 
-    CI = confidence_interval(beta_CI, MSE_test)
-    return [MSE_train,R2_train, MSE_test, bias_test, variance_test, CI]
+    CI = confidence_interval(np.mean(betas,axis=1,keepdims=True), MSE_test)
+    return [MSE_train,R2_test, MSE_test, bias_test, variance_test, CI]
 
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
@@ -327,7 +394,6 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
         test_MSE[j] = scores[2]
-        #test_R2[j] = scores[1]
 
     return test_MSE
 
@@ -339,9 +405,8 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     As an example we now use "best" lambda = 0.1
     """
     train_MSE = np.zeros(len(degrees))
-    train_R2 = np.zeros(len(degrees))
-
     test_MSE = np.zeros(len(degrees))
+
     test_R2 = np.zeros(len(degrees))
     bias = np.zeros(len(degrees))
     variance = np.zeros(len(degrees))
@@ -356,11 +421,11 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         #print (beta)
         train_MSE[j] = scores[0]
-        train_R2[j] = scores[1]
+        test_R2[j] = scores[1]
 
         test_MSE[j] = scores[2]
         bias[j] = scores[3]
         variance[j] = scores[4]
         CI[j] = scores[5]
 
-    return test_MSE, bias, variance, CI
+    return test_MSE,test_R2, bias, variance, CI

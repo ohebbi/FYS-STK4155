@@ -17,10 +17,7 @@ from sklearn.model_selection import KFold
 import sklearn.linear_model as skl
 
 from sklearn.model_selection import train_test_split
-
 from tqdm import tqdm
-
-
 from functions import *
 
 
@@ -31,8 +28,6 @@ def main(x,y,z):
 
     #if overfit: activate next line
     #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
-
-
 
     # We use now Scikit-Learn's linear regressor for control of our results
     #clf = skl.LinearRegression().fit(X, z)
@@ -57,7 +52,7 @@ def main(x,y,z):
 
     #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
 
-    #    print (x_train)
+    #print (x_train)
 
     """
     OLS regression
@@ -97,7 +92,7 @@ def main(x,y,z):
     plt.ylabel("Error")
     plt.title("OLS regression MSE")
     plt.show()
-    
+
     plt.plot(degrees,test_R2)
     plt.legend(["test_R2"])
     plt.xlabel("Complexity of model (the degree of the polynomial)")
@@ -138,7 +133,7 @@ def main(x,y,z):
 
     lamb = 0.001
 
-    test_MSE_Ridge, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
+    test_MSE_Ridge, R2_Ridge, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
     plt.plot(degrees,test_MSE_Ridge)
     plt.legend(["lamb = 0.001"])
@@ -189,7 +184,7 @@ def main(x,y,z):
     """
     lamb = 0.1
 
-    test_MSE_LASSO, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    test_MSE_LASSO, R2_LASSO, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
 
     plt.plot(degrees,test_MSE_LASSO)
     plt.legend(["lamb = 0.1"])
@@ -199,65 +194,6 @@ def main(x,y,z):
     plt.show()
 
 
-    """
-    plt.plot(t,train_MSE,'r')
-    plt.plot(t,test_MSE,'b')
-    plt.legend(["train MSE","test MSE"])
-    plt.show()
-    """
-
-    """
-    Terrain data
-    """
-    """
-    x,y,z = terrain_data()
-    x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
-
-    test_MSE = np.zeros(len(t))
-    test_bias = np.zeros(len(t))
-    test_variance = np.zeros(len(t))
-
-    train_MSE = np.zeros(len(t))
-    train_bias = np.zeros(len(t))
-    train_variance = np.zeros(len(t))
-
-
-    k = 5 #cross fold
-    for polygrad in tqdm(t):
-
-        j = int(polygrad) - 1
-        train_MSE[j], train_bias[j], train_variance[j], beta = crossvalidation(x_train,y_train,z_train, k, polygrad, regressiontype = 'OLS') #length to beta should be equal to dimension of X
-        X = find_designmatrix(x_test,y_test, polygrad)
-
-        z_pred = X.dot(beta)
-
-        #scores_R2[j] = R2(z_test, z_pred)
-        test_MSE[j] = MSE(z_test, z_pred)
-        square = z_test - np.mean(z_pred)
-        test_bias[j] = np.mean( (square)**2 )
-        test_variance[j] = np.mean( np.var(z_pred))
-    plt.plot(t,train_MSE)
-    plt.plot(t,train_variance)
-    plt.plot(t,train_bias)
-    plt.legend(["train MSE","train variance", "train bias"])
-    plt.show()
-    plt.plot(t,test_MSE)
-    plt.plot(t,test_variance)
-    plt.plot(t,test_bias)
-    plt.plot(t,test_variance+test_bias)
-    plt.legend(["test MSE","test variance", "test bias","bias + variance"])
-    plt.show()
-
-    plt.plot(t,train_MSE,'r')
-    plt.plot(t,test_MSE,'b')
-    plt.legend(["train MSE","test MSE"])
-    plt.show()
-    """
-    #exercise d)
-    #ridge_regression(x_train, x_test, y_train, y_test,z_train, z_test)
-
-    #exercise e)
-    #lasso_regression(x_train, x_test, y_train, y_test,z_train, z_test)
 def bootstrap_main(x,y,z):
     degrees = np.linspace(1,12,12)
     error_test = bootstrap(x,y,z,degrees,"OLS")
@@ -271,5 +207,5 @@ if __name__ == '__main__':
     #bootstrap_main(x,y,z)
 
     print("======================================\nTerrain data\n======================================")
-    x,y,z = terrain_data(skip_nr_points=10)
+    x,y,z = terrain_data(skip_nr_points=50)
     main(x,y,z)
