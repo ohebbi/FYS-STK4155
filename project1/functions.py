@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge, LinearRegression, Lasso
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
 import sklearn.linear_model as skl
-
+import tqdm as tqdm
 from sklearn.model_selection import train_test_split
 
 def FrankeFunction(x,y):
@@ -18,30 +18,21 @@ def FrankeFunction(x,y):
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
     return term1 + term2 + term3 + term4
 
-def generate_data(plott = False):
+def generate_data(plott = True):
     """
     Generates data.
     """
     x_data = np.arange(0, 1, 0.05)
     y_data = np.arange(0, 1, 0.05)
+    print ("x ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
+    print ("y ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
+
     x, y = np.meshgrid(x_data,y_data)
 
     z = FrankeFunction(x, y)
-
-
     if plott == True:
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        # Plot the surface.
-        surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
-                       linewidth=0, antialiased=False)
-                       # Customize the z axis.
-        ax.set_zlim(-0.10, 1.40)
-        ax.zaxis.set_major_locator(LinearLocator(10))
-        ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-        # Add a color bar which maps values to colors.
-        fig.colorbar(surf, shrink=0.5, aspect=5)
-        plt.show()
+        plotter(x,y,z)
+        plt.savefig('plots/frankefunction.pdf')
 
     #flatten the matrix out
     x = np.ravel(x)
@@ -53,6 +44,18 @@ def generate_data(plott = False):
 
     return x, y, z
     #print (x_train)
+def plotter(x,y,z):
+    fig = plt.figure();
+    ax = fig.gca(projection='3d');
+    # Plot the surface.
+    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False);
+                       # Customize the z axis.
+    ax.set_zlim(-0.10, 1.40);
+    ax.zaxis.set_major_locator(LinearLocator(10));
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5);
 
 def terrain_data(skip_nr_points=50 ,plott = True):
     """
@@ -65,25 +68,38 @@ def terrain_data(skip_nr_points=50 ,plott = True):
     #Reducing the size of the terrain data to improve computation time
     z_data = terrain1[::skip_nr_points,::skip_nr_points]
 
+    x_data = np.linspace(0,1,len(z_data[0]))
+    y_data = np.linspace(0,1,len(z_data[:,0]))
+
+    x, y = np.meshgrid(x_data,y_data)
+    z = z_data
+    z = (z - np.mean(z))/np.sqrt(np.var(z))
 
     if plott == True:
+        fig = plt.figure();
+        ax = fig.gca(projection='3d');
+        # Plot the surface.
+        surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False);
+                           # Customize the z axis.
+        #ax.set_zlim(-0.10, 1.40);
+        ax.zaxis.set_major_locator(LinearLocator(10));
+        ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
+        # Add a color bar which maps values to colors.
+        fig.colorbar(surf, shrink=0.5, aspect=5);
+
         fig1 = plt.figure()
         plt.title("Terrain over a part of Norway")
         image = plt.imshow(z_data)
         plt.colorbar(image)
         plt.xlabel('X')
         plt.ylabel('Y')
-        plt.savefig("Aktuelt område.png")
+        plt.savefig("plots/2D_plot_TERRAIN.pdf")
         plt.show()
 
     #flatten the matrix out
     #x_data = np.arange(0,len(z_data[0]),1)
     #y_data = np.arange(0,len(z_data[:,0]),1)
-
-    x_data = np.linspace(0,1,len(z_data[0]))
-    y_data = np.linspace(0,1,len(z_data[:,0]))
-
-    x, y = np.meshgrid(x_data,y_data)
 
     x = np.ravel(x)
     y = np.ravel(y)
@@ -152,12 +168,6 @@ def MSE(z_data,z_model):
 #We are approximating variance to be equal MSE
 def confidence_interval(beta, MSE):
     sigma = np.sqrt(MSE)
-    mean_beta = 0
-
-    for i in beta:
-        mean_beta += i
-    #print ("confidence interval is from %2.4f to %2.4f." %
-    #        (mean_beta-sigma*1.96, mean_beta+sigma*1.96))
     beta_low = np.mean(beta)-sigma*1.96
     beta_high = np.mean(beta)+sigma*1.96
     return [beta_low, np.mean(beta), beta_high]
@@ -325,7 +335,7 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     polydegree =  np.zeros(maxdegree)
     x_train, x_test, y_train, y_test, z_train, z_test = train_test_split(x,y,z,test_size  = 0.2)
 
-    for degree in degrees:
+    for degree in tqdm.tqdm(degrees):
 
         z_ALL_pred = np.empty((z_test.shape[0],n_bootstrap))
         X_test = find_designmatrix(x_test, y_test, polygrad=degree)
@@ -360,11 +370,12 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 
     x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
 
-    scores, betas = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
+    scores, beta_k_fold = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
     MSE_train = scores[0]
 
     X_test = find_designmatrix(x_test, y_test, polygrad=polygrad)
-    z_pred = X_test @ betas
+    z_pred = X_test @ beta_k_fold
+
     z_test = np.reshape(z_test,(len(z_test),1))
 
     #Calculating different value.
@@ -373,8 +384,9 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
     R2_test = R2(z_test,np.mean(z_pred,axis=1,keepdims=True))
 
-    CI = confidence_interval(np.mean(betas,axis=1,keepdims=True), MSE_test)
-    return [MSE_train,R2_test, MSE_test, bias_test, variance_test, CI]
+    CI = confidence_interval(np.mean(beta_k_fold,axis=1,keepdims=True), MSE_test)
+
+    return [MSE_train,R2_test, MSE_test, bias_test, variance_test, CI], beta_k_fold
 
 
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
@@ -383,7 +395,6 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     First running CV for finding best lambda with lowest MSE.
     """
 
-
     test_MSE = np.zeros(len(degrees))
     test_R2 = np.zeros(len(degrees))
 
@@ -391,7 +402,7 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
         j = int(polygrad) - 1
 
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
+        scores, beta_tmp = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
         test_MSE[j] = scores[2]
 
@@ -412,12 +423,12 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
     variance = np.zeros(len(degrees))
 
     CI = np.zeros((len(degrees),3))
+    bet = {}
     for polygrad in degrees:
 
         j = int(polygrad) - 1
 
-        scores = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
-
+        scores, bet[int(polygrad)] = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
         #print (beta)
         train_MSE[j] = scores[0]
@@ -428,4 +439,4 @@ def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
         variance[j] = scores[4]
         CI[j] = scores[5]
 
-    return test_MSE,test_R2, bias, variance, CI
+    return test_MSE,test_R2, bias, variance, CI, bet,train_MSE

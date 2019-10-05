@@ -24,17 +24,6 @@ from functions import *
 def main(x,y,z):
 
     #exercise a)
-    #x,y,z = generate_data()
-
-    #if overfit: activate next line
-    #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
-
-    # We use now Scikit-Learn's linear regressor for control of our results
-    #clf = skl.LinearRegression().fit(X, z)
-    #z_tilde_skl = clf).predict(X)
-
-    #print(ztilde-ztilde_skl)
-    #exercise b)
     """
     5-fold crossvalidation OLS
     """
@@ -49,10 +38,7 @@ def main(x,y,z):
 
     train_MSE = np.zeros(len(degrees))
     train_R2 = np.zeros(len(degrees))
-
-    #x_train, x_test, y_train, y_test,z_train, z_test = train_test_split(x,y,z, test_size=0.1, shuffle=True)
-
-    #print (x_train)
+    betas_OLS = {}
 
     """
     OLS regression
@@ -62,7 +48,7 @@ def main(x,y,z):
     for polygrad in degrees:
 
         j = int(polygrad) - 1
-        scores = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
+        scores, betas_OLS[int(polygrad)] = bias_variance(x,y,z,polygrad,k, regressiontype='OLS')
 
         train_MSE[j] = scores[0]
         test_R2[j] = scores[1]
@@ -71,13 +57,26 @@ def main(x,y,z):
         bias[j] = scores[3]
         variance[j] = scores[4]
 
-        #print('Bias^2:', test_bias[j])
-        #print('Var:', test_variance[j])
-        #print('{} >= {} + {} = {}'.format(test_MSE[j],test_bias[j], test_variance[j], test_bias[j]+test_variance[j]))
+    X = find_designmatrix(x,y,2)
+    beta = betas_OLS[2]
+    z_OLS = X @ beta
+    #z_Ridge = X @ betas_Ridge['7']
+    #z_LASSO = X @ betas_LASSO['7']
+    x = np.reshape(x,(len(x),1))
+    y = np.reshape(y,(len(y),1))
+    z = np.reshape(z,(len(z),1))
 
-    plt.plot(degrees,test_MSE_OLS)
-    plt.plot(degrees,variance)
-    plt.plot(degrees,bias)
+    plotter(x, y, z_OLS)
+
+    x, y = np.meshgrid(x,y)
+    #z_OLS = np.reshape(z_OLS,(len(z_OLS)),1)
+
+    #print (x, y, z_OLS)
+    #plotter(x, y, z_OLS)
+
+    exit(1)
+
+
 
     plt.legend(["test_MSE","variance", "bias"])
     plt.title("OLS regression Bias-Variance Tradeoff")
@@ -133,7 +132,7 @@ def main(x,y,z):
 
     lamb = 0.001
 
-    test_MSE_Ridge, R2_Ridge, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
+    test_MSE_Ridge, R2_Ridge, Bias, Variance, CI, betas_Ridge = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Ridge')
 
     plt.plot(degrees,test_MSE_Ridge)
     plt.legend(["lamb = 0.001"])
@@ -184,7 +183,7 @@ def main(x,y,z):
     """
     lamb = 0.1
 
-    test_MSE_LASSO, R2_LASSO, Bias, Variance, CI = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
+    test_MSE_LASSO, R2_LASSO, Bias, Variance, CI, betas_LASSO = Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='Lasso')
 
     plt.plot(degrees,test_MSE_LASSO)
     plt.legend(["lamb = 0.1"])
@@ -192,6 +191,18 @@ def main(x,y,z):
     plt.xlabel("Complexity of model (the degree of the polynomial)")
     plt.ylabel("Error")
     plt.show()
+
+    X = find_designmatrix(x_test,y_test)
+    z_OLS = X @ betas_OLS[7]
+    #z_Ridge = X @ betas_Ridge['7']
+    #z_LASSO = X @ betas_LASSO['7']
+
+    z_test = np.reshape(z_test,(len(z_test),1))
+
+    plotter(x_test, y_test, z_test)
+    plotter(x_test, y_test, z_OLS)
+    #plotter(x_test, y_test, z_Ridge)
+    #plotter(x_test, y_test, z_LASSO)
 
 
 def bootstrap_main(x,y,z):
@@ -203,9 +214,9 @@ def bootstrap_main(x,y,z):
 
 if __name__ == '__main__':
     x,y,z = generate_data()
-    main(x,y,z)
+    #main(x,y,z)
     #bootstrap_main(x,y,z)
 
     print("======================================\nTerrain data\n======================================")
-    x,y,z = terrain_data(skip_nr_points=50)
-    main(x,y,z)
+    x,y,z = terrain_data(skip_nr_points=20)
+    #main(x,y,z)
