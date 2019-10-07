@@ -62,6 +62,14 @@ def generate_data(plott = True):
     return x, y, z
     #print (x_train)
 def plotter(x,y,z):
+    """
+    Function:
+    Generates a three dimensional plot.
+    Input:
+    Takes an array x, y and z.
+    Output:
+    Gives a plot.
+    """
     fig = plt.figure();
     ax = fig.gca(projection='3d');
     # Plot the surface.
