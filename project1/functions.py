@@ -4,12 +4,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from imageio import imread
-from sklearn.linear_model import Ridge, LinearRegression, Lasso
-from sklearn.model_selection import cross_validate
-from sklearn.model_selection import KFold
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.model_selection import KFold, train_test_split
 import sklearn.linear_model as skl
 import tqdm as tqdm
-from sklearn.model_selection import train_test_split
 
 def FrankeFunction(x,y):
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -70,12 +68,15 @@ def terrain_data(skip_nr_points=50 ,plott = True):
 
     x_data = np.linspace(0,1,len(z_data[0]))
     y_data = np.linspace(0,1,len(z_data[:,0]))
+    print ("x ranges from", 0, "to", 1, "with a total amount of", (len(z_data[0]), "points."))
+    print ("y ranges from", 0, "to", 1, "with a total amount of", (len(z_data[:,0]), "points."))
 
     x, y = np.meshgrid(x_data,y_data)
     z = z_data
     z = (z - np.mean(z))/np.sqrt(np.var(z))
 
     if plott == True:
+
         fig = plt.figure();
         ax = fig.gca(projection='3d');
         # Plot the surface.
@@ -87,6 +88,8 @@ def terrain_data(skip_nr_points=50 ,plott = True):
         ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
         # Add a color bar which maps values to colors.
         fig.colorbar(surf, shrink=0.5, aspect=5);
+        plt.title("Terrain Data")
+        plt.savefig("plots/Terrain/3D_plot_TERRAIN.pdf")
 
         fig1 = plt.figure()
         plt.title("Terrain over a part of Norway")
@@ -94,7 +97,7 @@ def terrain_data(skip_nr_points=50 ,plott = True):
         plt.colorbar(image)
         plt.xlabel('X')
         plt.ylabel('Y')
-        plt.savefig("plots/2D_plot_TERRAIN.pdf")
+        plt.savefig("plots/Terrain/2D_plot_TERRAIN.pdf")
         plt.show()
 
     #flatten the matrix out
@@ -145,9 +148,8 @@ def find_designmatrix(x,y, polygrad=5):
                      x*x3,y*y3,x3*y,x*y3,x2*y2, #4-degree polynomial
                      x3*x2,y3*y2,(x2*x2)*y, x*(y2*y2),x3*y2,x2*y3] #5-degree polynomial #21
 
-    #General formula to avoid hardcoding too much.
-
-    elif polygrad > 5:
+    #General formula to avoid hardcoding 'too' much.
+    elif (polygrad > 5):
         X = np.zeros( (len(x), int(0.5*(polygrad + 2)*(polygrad + 1)) ) )
         poly = 0
         for i in range(int(polygrad) + 1):
