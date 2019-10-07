@@ -4,7 +4,7 @@ This project is divided into two parts. The first part is modeling Franke's func
 - main_terrain.py. This file models the terrain data.
 
 All of our functions can be found in the file
--functions.py
+- functions.py
 
 ## How to run the files 
 The required packages included to run the jupyter notebooks are 
