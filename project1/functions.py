@@ -9,19 +9,38 @@ from sklearn.model_selection import KFold, train_test_split
 import sklearn.linear_model as skl
 import tqdm as tqdm
 
+#For bootstrap
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.utils import resample
+
 def FrankeFunction(x,y):
+    """
+    Generates Franke's function.
+    Input:
+    Takes array x and y.
+    Output
+    Returns array z.
+    """
+
     term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
     term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
     term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
     term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
+
     return term1 + term2 + term3 + term4
 
 def generate_data(plott = True):
     """
     Generates data.
+    Input:
+    plott = True for plotting.
+    Output:
+    returns 1D arrays x, y and z (after begin raveled).
     """
     x_data = np.arange(0, 1, 0.05)
     y_data = np.arange(0, 1, 0.05)
+
     print ("x ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
     print ("y ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
 
@@ -57,7 +76,12 @@ def plotter(x,y,z):
 
 def terrain_data(skip_nr_points=50 ,plott = True):
     """
-
+    Generates the terrain data.
+    Input:
+    Skip number of points (lower number to include more data but will be slow)
+    plott = True for plotting.
+    Output:
+    returns 1D arrays x, y and z (after begin raveled).
     """
 
     #load the terrain
@@ -101,9 +125,6 @@ def terrain_data(skip_nr_points=50 ,plott = True):
         plt.show()
 
     #flatten the matrix out
-    #x_data = np.arange(0,len(z_data[0]),1)
-    #y_data = np.arange(0,len(z_data[:,0]),1)
-
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z_data)
@@ -113,7 +134,14 @@ def terrain_data(skip_nr_points=50 ,plott = True):
     return x, y, z
 
 def find_designmatrix(x,y, polygrad=5):
-
+    """
+    Function:
+    Generates the designmatrix.
+    Input:
+    Takes an array x and y and a polynomial degree.
+    Output:
+    Returns a multidimensional array (designmatrix).
+    """
     x2 = x*x
     y2 = y*y
     x3 = x*x*x
@@ -159,16 +187,41 @@ def find_designmatrix(x,y, polygrad=5):
     return X
 
 def R2(z_data, z_model):
+    """
+    Function:
+    Finds the R2-level for a given model and approximation.
+    Input:
+    Takes an array z_data and z_model.
+    Output:
+    Returns a scalar.
+    """
     return (1 - np.sum( (z_data - z_model)**2 ) / np.sum((z_data - np.mean(z_data))**2))
 
 def MSE(z_data,z_model):
+    """
+    Function:
+    Finds the mean square error for a given model and approximation.
+    Input:
+    Takes an array z_data and z_model.
+    Output:
+    Returns a scalar.
+    """
     summ = 0
     for i in range(len(z_data)):
         summ += (z_data[i] - z_model[i])**2
     return summ/(len(z_data))
 
-#We are approximating variance to be equal MSE
 def confidence_interval(beta, MSE):
+    """
+    Function:
+    Finds the confidence interval.
+    We are approximating the variance to be equal the mean square error.
+    Input:
+    Array beta and scalar MSE.
+    Output:
+    Array of three indexes with low, mid, and high beta values.
+    """
+
     sigma = np.sqrt(MSE)
     beta_low = np.mean(beta)-sigma*1.96
     beta_high = np.mean(beta)+sigma*1.96
@@ -282,8 +335,6 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
         yval = y[val_inds]
         zval = z[val_inds]
 
-
-        #(len(xtrain),len(x), len(xtest))
         Xtrain = find_designmatrix(xtrain,ytrain, polygrad)
 
         if regressiontype == 'OLS':
@@ -312,7 +363,6 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
     train_MSE = np.mean(train_MSE)
     return [train_MSE], betas
 
-
 def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     """
     Function:
@@ -326,15 +376,14 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
     Returns an array of mean square error, the bias, and the variance of the
     test data.
     """
-    from sklearn.preprocessing import PolynomialFeatures
-    from sklearn.pipeline import make_pipeline
-    from sklearn.utils import resample
     maxdegree = int(degrees[-1])
-    error_test = np.zeros(maxdegree)
-    mse = np.zeros(maxdegree)
-    bias =  np.zeros(maxdegree)
-    variance =  np.zeros(maxdegree)
+
+    error_test =  np.zeros(maxdegree)
+    mse        =  np.zeros(maxdegree)
+    bias       =  np.zeros(maxdegree)
+    variance   =  np.zeros(maxdegree)
     polydegree =  np.zeros(maxdegree)
+
     x_train, x_test, y_train, y_test, z_train, z_test = train_test_split(x,y,z,test_size  = 0.2)
 
     for degree in tqdm.tqdm(degrees):
@@ -360,16 +409,25 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
 
             z_ALL_pred[:, i] = (X_test @ betatrain).ravel()
 
-        #print (z_train)
         z_test = np.reshape(z_test,(len(z_test),1))
 
         error_test[int(degree)-1] = np.mean( np.mean( ( z_test - z_ALL_pred)**2,axis=1,keepdims=True) )
-        bias[int(degree)-1] = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
-        variance[int(degree)-1] = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
+        bias[int(degree)-1]       = np.mean( (z_test - np.mean(z_ALL_pred, axis=1, keepdims=True))**2 )
+        variance[int(degree)-1]   = np.mean( np.var(z_ALL_pred, axis=1, keepdims=True) )
     return [error_test, bias, variance]
 
 def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
-
+    """
+    Function:
+    Finds the bias and variance for some independent test data.
+    Input:
+    Takes an array x,y, and z, with polynomial degree polygrad, k number of K-fold
+    cross validation, hyperparameter lambda and a regression type.
+    Output:
+    Returns a list with an array of MSE for train data, and an array of MSE,
+    an array of bias and an array of variance for test data, an an array of
+    confidence intervals for beta values, and the average beta_values for k-fold CV.
+    """
     x, x_test, y, y_test, z, z_test = train_test_split(x,y,z,test_size=0.2)
 
     scores, beta_k_fold = k_fold_cross_validation(x, y, z, polygrad, k, regressiontype, get_CI = True)
@@ -381,10 +439,10 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     z_test = np.reshape(z_test,(len(z_test),1))
 
     #Calculating different value.
-    MSE_test = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
-    bias_test = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
+    MSE_test      = np.mean( np.mean(( z_test - z_pred)**2,axis=1,keepdims=True) )
+    bias_test     = np.mean( (z_test - np.mean(z_pred, axis = 1, keepdims=True))**2)
     variance_test = np.mean( np.var(z_pred, axis=1, keepdims=True) )
-    R2_test = R2(z_test,np.mean(z_pred,axis=1,keepdims=True))
+    R2_test       = R2(z_test,np.mean(z_pred,axis=1,keepdims=True))
 
     CI = confidence_interval(np.mean(beta_k_fold,axis=1,keepdims=True), MSE_test)
 
@@ -394,7 +452,13 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
 def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
     """
-    First running CV for finding best lambda with lowest MSE.
+    Function:
+    Runs bias_variance function for different polynomial degrees.
+    Input:
+    Data x,y and z with an array of polynomial degree degrees, number of k-fold
+    cross validation, hyperparameter lamb, and a regression type.
+    Output:
+    Returns an array with mean square errors for the test data.
     """
 
     test_MSE = np.zeros(len(degrees))
@@ -414,31 +478,38 @@ def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 def Best_Lambda(x, y, z, degrees, k, lamb, regressiontype='OLS'):
 
     """
-    Then calculate the bias-variance with the best lambda.
-    As an example we now use "best" lambda = 0.1
+    Function:
+    Runs bias_variance for different polynomial degrees.
+    Input:
+    Takes arrays of data x,y and z, with array of polynomial degrees, k number of
+    k-fold cross validation, a hyperparameter lamb and regressiontype.
+    Output:
+    Returns arrays of mean square errors for MSE, R2, bias, variance, confidence
+    interval for test data. Then returns a dictionary with beta values for different
+    polynomial degrees, and finally returns the mean square error for training
+    data.
     """
     train_MSE = np.zeros(len(degrees))
-    test_MSE = np.zeros(len(degrees))
+    test_MSE  = np.zeros(len(degrees))
 
-    test_R2 = np.zeros(len(degrees))
-    bias = np.zeros(len(degrees))
+    test_R2  = np.zeros(len(degrees))
+    bias     = np.zeros(len(degrees))
     variance = np.zeros(len(degrees))
 
-    CI = np.zeros((len(degrees),3))
+    CI  = np.zeros((len(degrees),3))
     bet = {}
+
     for polygrad in degrees:
 
         j = int(polygrad) - 1
 
         scores, bet[int(polygrad)] = bias_variance(x, y, z, polygrad, k, lamb, regressiontype)
 
-        #print (beta)
         train_MSE[j] = scores[0]
-        test_R2[j] = scores[1]
-
-        test_MSE[j] = scores[2]
-        bias[j] = scores[3]
-        variance[j] = scores[4]
-        CI[j] = scores[5]
+        test_R2[j]   = scores[1]
+        test_MSE[j]  = scores[2]
+        bias[j]      = scores[3]
+        variance[j]  = scores[4]
+        CI[j]        = scores[5]
 
     return test_MSE,test_R2, bias, variance, CI, bet,train_MSE
