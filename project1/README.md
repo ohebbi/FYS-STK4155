@@ -1,4 +1,4 @@
-# Franke's function and Terrain data using five-fold cross validation and three regression types. 
+# Model of Franke's function and a geographic area in Norway using five-fold cross validation and three regression types. 
 This project is divided into two parts. The first part is modeling Franke's function, while the second part is modeling some given terrain data from Norway. 
 
 ## Code skeleton
