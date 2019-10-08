@@ -2,7 +2,8 @@
 This project is divided into two parts. The first part is modeling Franke's function, while the second part is modeling some given terrain data from Norway. 
 
 ## Code skeleton
-- datafiles 
+- datafiles
+  - .. (.tif files which is our model for the terrain)
 - functions
   - functions.py (this is where all of the functions are)
 - plots
