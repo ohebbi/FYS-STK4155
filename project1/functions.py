@@ -30,7 +30,7 @@ def FrankeFunction(x,y):
 
     return term1 + term2 + term3 + term4
 
-def generate_data(plott = True):
+def generate_data(number_points = 20, plott = True):
     """
     Generates data.
     Input:
@@ -38,18 +38,18 @@ def generate_data(plott = True):
     Output:
     returns 1D arrays x, y and z (after begin raveled).
     """
-    x_data = np.arange(0, 1, 0.05)
-    y_data = np.arange(0, 1, 0.05)
+    x_data = np.arange(0, 1, 1./number_points)
+    y_data = np.arange(0, 1, 1./number_points)
 
-    print ("x ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
-    print ("y ranges from", 0, "to", 1, "with a total amount of", int(1./0.02), "points.")
+    print ("x ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
+    print ("y ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
 
     x, y = np.meshgrid(x_data,y_data)
 
     z = FrankeFunction(x, y)
     if plott == True:
         plotter(x,y,z)
-        plt.savefig('plots/frankefunction.pdf')
+        plt.savefig('plots/Franke/frankefunction.pdf')
 
     #flatten the matrix out
     x = np.ravel(x)
@@ -79,6 +79,8 @@ def plotter(x,y,z):
     ax.set_zlim(-0.10, 1.40);
     ax.zaxis.set_major_locator(LinearLocator(10));
     ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
+    for angle in range(0,150):
+        ax.view_init(40,angle)
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5);
 
@@ -100,8 +102,8 @@ def terrain_data(skip_nr_points=50 ,plott = True):
 
     x_data = np.linspace(0,1,len(z_data[0]))
     y_data = np.linspace(0,1,len(z_data[:,0]))
-    print ("x ranges from", 0, "to", 1, "with a total amount of", (len(z_data[0]), "points."))
-    print ("y ranges from", 0, "to", 1, "with a total amount of", (len(z_data[:,0]), "points."))
+    print ("x ranges from", 0, "to", 1, "with a total amount of", len(z_data[0]), "points.")
+    print ("y ranges from", 0, "to", 1, "with a total amount of", len(z_data[:,0]), "points.")
 
     x, y = np.meshgrid(x_data,y_data)
     z = z_data
@@ -118,6 +120,8 @@ def terrain_data(skip_nr_points=50 ,plott = True):
         #ax.set_zlim(-0.10, 1.40);
         ax.zaxis.set_major_locator(LinearLocator(10));
         ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
+        for angle in range(0,150):
+            ax.view_init(40,angle)
         # Add a color bar which maps values to colors.
         fig.colorbar(surf, shrink=0.5, aspect=5);
         plt.title("Terrain Data")
@@ -190,7 +194,7 @@ def find_designmatrix(x,y, polygrad=5):
         poly = 0
         for i in range(int(polygrad) + 1):
             for j in range(int(polygrad) + 1 - i):
-                X[:,poly] = (x**i)*(y**j)
+                X[:,poly] = np.squeeze((x**i)*(y**j))
                 poly += 1
     return X
 
@@ -371,7 +375,7 @@ def k_fold_cross_validation(x, y, z, polygrad, k=5, lamb=0, regressiontype = 'OL
     train_MSE = np.mean(train_MSE)
     return [train_MSE], betas
 
-def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
+def bootstrap(x,y,z,degrees,lamb=0,regressiontype='OLS',n_bootstrap=100):
     """
     Function:
     This is a resample-technique based on the bootstrap method.
@@ -409,11 +413,12 @@ def bootstrap(x,y,z,degrees,regressiontype,n_bootstrap=100):
             if regressiontype == 'OLS':
                 betatrain = OLS(Xtrain,z_)
             elif regressiontype == 'Ridge':
-                betatrain = ridge_regression(Xtrain, z_)
+                betatrain = ridge_regression(Xtrain, z_, lamb)
             elif regressiontype == 'Lasso':
-                betatrain = lasso_regression(Xtrain, z_)
+                betatrain = lasso_regression(Xtrain, z_, lamb)
             else:
                 raise ValueError ("regression-type is lacking input!")
+
 
             z_ALL_pred[:, i] = (X_test @ betatrain).ravel()
 
@@ -457,7 +462,7 @@ def bias_variance(x, y, z, polygrad, k, lamb=0, regressiontype = 'OLS'):
     return [MSE_train,R2_test, MSE_test, bias_test, variance_test, CI], beta_k_fold
 
 
-def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS'):
+def Different_Lambdas(x, y, z, degrees, k, lamb, regressiontype='OLS', resample_method='K_fold_CV'):
 
     """
     Function:
