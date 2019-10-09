@@ -41,9 +41,6 @@ def generate_data(number_points = 20, plott = True):
     x_data = np.arange(0, 1, 1./number_points)
     y_data = np.arange(0, 1, 1./number_points)
 
-    print ("x ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
-    print ("y ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
-
     x, y = np.meshgrid(x_data,y_data)
 
     z = FrankeFunction(x, y)
@@ -55,6 +52,10 @@ def generate_data(number_points = 20, plott = True):
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z)
+
+    print ("x ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
+    print ("y ranges from", 0, "to", 1, "with a total amount of", number_points, "points.")
+
 
     eps = np.random.normal(0,1,len(z))
     z += 0.1*eps
@@ -102,10 +103,10 @@ def terrain_data(skip_nr_points=50 ,plott = True):
 
     x_data = np.linspace(0,1,len(z_data[0]))
     y_data = np.linspace(0,1,len(z_data[:,0]))
-    print ("x ranges from", 0, "to", 1, "with a total amount of", len(z_data[0]), "points.")
-    print ("y ranges from", 0, "to", 1, "with a total amount of", len(z_data[:,0]), "points.")
 
     x, y = np.meshgrid(x_data,y_data)
+
+
     z = z_data
     z = (z - np.mean(z))/np.sqrt(np.var(z))
 
@@ -121,7 +122,7 @@ def terrain_data(skip_nr_points=50 ,plott = True):
         ax.zaxis.set_major_locator(LinearLocator(10));
         ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'));
         for angle in range(0,150):
-            ax.view_init(40,angle)
+            ax.view_init(60,angle)
         # Add a color bar which maps values to colors.
         fig.colorbar(surf, shrink=0.5, aspect=5);
         plt.title("Terrain Data")
@@ -140,6 +141,9 @@ def terrain_data(skip_nr_points=50 ,plott = True):
     x = np.ravel(x)
     y = np.ravel(y)
     z = np.ravel(z_data)
+
+    print ("x ranges from", 0, "to", 1, "with a total amount of", len(x), "points.")
+    print ("y ranges from", 0, "to", 1, "with a total amount of", len(y), "points.")
 
     z = (z - np.mean(z))/np.sqrt(np.var(z))
 
@@ -260,8 +264,8 @@ def SVDinv(A):
 def OLS(X,z,inversion='SVD'):
     """
     Function:
-    This is a solver for the ordinary least square method. Choose SVD for
-    numerical stability or choose normal inversion for faster computation.
+    This is a solver for the ordinary least square method. Choose 'SVD' for
+    numerical stability or choose 'normal' inversion for faster computation.
 
     Input:
     Takes a design matrix as X, a target-vector as z and inversion type.
