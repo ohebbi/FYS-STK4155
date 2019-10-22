@@ -33,7 +33,7 @@ class NeuralNetwork:
         self.hidden_weights_0 = np.random.randn(self.n_features, self.n_hidden_neurons)
         self.hidden_bias_0 = np.zeros(self.n_hidden_neurons) + 0.01
         
-        self.hidden_weights_1 = np.random.randn(self.n_features, self.n_hidden_neurons)
+        self.hidden_weights_1 = np.random.randn(self.n_hidden_neurons, self.n_hidden_neurons)
         self.hidden_bias_1 = np.zeros(self.n_hidden_neurons) + 0.01
 
         self.output_weights = np.random.randn(self.n_hidden_neurons, self.n_categories)
@@ -44,12 +44,8 @@ class NeuralNetwork:
         self.z_h_0 = np.matmul(self.X_data, self.hidden_weights_0) + self.hidden_bias_0
         self.a_h_0 = sigmoid(self.z_h_0)
         
-        print(self.z_h_0.shape, "z0")
-        print(self.X_data.shape, "X")
-        print(self.a_h_0.shape, self.hidden_weights_1.shape)
-        print(self.hidden_weights_0.shape)
-        print(self.hidden_bias_1.shape)
-        self.z_h_1 = np.matmul(self.a_h_0, self.hidden_weights_1) + self.hidden_bias_1
+        
+        self.z_h_1 = np.matmul(self.a_h_0 ,self.hidden_weights_1) + self.hidden_bias_1
         self.a_h_1 = sigmoid(self.z_h_1)
 
         self.z_o = np.matmul(self.a_h_1, self.output_weights) + self.output_bias
