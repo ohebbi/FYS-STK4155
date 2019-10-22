@@ -1,11 +1,12 @@
 import numpy as np
-from functions.functions import *
-
+from functions import *
+from HiddenLayer import HiddenLayer
 class NeuralNetwork:
     def __init__(
             self,
             X_data,
             Y_data,
+            n_hidden_layers = 2
             n_hidden_neurons=100,
             n_categories=2,
             epochs=10,
@@ -20,15 +21,23 @@ class NeuralNetwork:
         self.n_features = X_data.shape[1]
         self.n_hidden_neurons = n_hidden_neurons
         self.n_categories = n_categories
-
+        
+        self.n_hidden_layers = n_hidden_layers
+        
         self.epochs = epochs
         self.batch_size = batch_size
         self.iterations = self.n_inputs // self.batch_size
         self.eta = eta
         self.lmbd = lmbd
-
+        
+        self.create_hidden_layers()
+        
         self.create_biases_and_weights()
-
+    def create_hidden_layers(self):
+        self.hidden_layers = np.zeros((self.n_hidden_layers))
+        for i in range(self.n_hidden_layers):
+            self.hidden_layers[i] = HiddenLayer(self.n_hidden_neurons)
+        
     def create_biases_and_weights(self):
         self.hidden_weights_0 = np.random.randn(self.n_features, self.n_hidden_neurons)
         self.hidden_bias_0 = np.zeros(self.n_hidden_neurons) + 0.01
@@ -44,6 +53,12 @@ class NeuralNetwork:
         self.z_h_0 = np.matmul(self.X_data, self.hidden_weights_0) + self.hidden_bias_0
         self.a_h_0 = sigmoid(self.z_h_0)
         
+        #Should a_h be an attribute to hidden layer object, or should it be globally/locally defined in nn? 
+        a_h = self.hidden_layers[0].node_activation(self.X_data)
+
+        for i in range(1,self.n_hidden_layers):
+            
+            self.hidden_layers[i].node_activation(a_h)
         
         self.z_h_1 = np.matmul(self.a_h_0 ,self.hidden_weights_1) + self.hidden_bias_1
         self.a_h_1 = sigmoid(self.z_h_1)
