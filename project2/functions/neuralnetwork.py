@@ -30,18 +30,25 @@ class NeuralNetwork:
         self.create_biases_and_weights()
 
     def create_biases_and_weights(self):
-        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_neurons)
-        self.hidden_bias = np.zeros(self.n_hidden_neurons) + 0.01
+        self.hidden_weights_0 = np.random.randn(self.n_features, self.n_hidden_neurons)
+        self.hidden_bias_0 = np.zeros(self.n_hidden_neurons) + 0.01
+        
+        self.hidden_weights_1 = np.random.randn(self.n_hidden_neurons, self.n_hidden_neurons)
+        self.hidden_bias_1 = np.zeros(self.n_hidden_neurons) + 0.01
 
         self.output_weights = np.random.randn(self.n_hidden_neurons, self.n_categories)
         self.output_bias = np.zeros(self.n_categories) + 0.01
 
     def feed_forward(self):
         # feed-forward for training
-        self.z_h = np.matmul(self.X_data, self.hidden_weights) + self.hidden_bias
-        self.a_h = sigmoid(self.z_h)
+        self.z_h_0 = np.matmul(self.X_data, self.hidden_weights_0) + self.hidden_bias_0
+        self.a_h_0 = sigmoid(self.z_h_0)
+        
+        
+        self.z_h_1 = np.matmul(self.a_h_0 ,self.hidden_weights_1) + self.hidden_bias_1
+        self.a_h_1 = sigmoid(self.z_h_1)
 
-        self.z_o = np.matmul(self.a_h, self.output_weights) + self.output_bias
+        self.z_o = np.matmul(self.a_h_1, self.output_weights) + self.output_bias
 
         exp_term = np.exp(self.z_o)
         self.probabilities = exp_term / np.sum(exp_term, axis=1, keepdims=True)
@@ -49,10 +56,13 @@ class NeuralNetwork:
 
     def feed_forward_out(self, X):
         # feed-forward for output
-        z_h = np.matmul(X, self.hidden_weights) + self.hidden_bias
-        a_h = sigmoid(z_h)
+        z_h_0 = np.matmul(X, self.hidden_weights_0) + self.hidden_bias_0
+        a_h_0 = sigmoid(z_h_0)
+        
+        z_h_1 = np.matmul(a_h_0, self.hidden_weights_1) + self.hidden_bias_1
+        a_h_1 = sigmoid(z_h_1)
 
-        z_o = np.matmul(a_h, self.output_weights) + self.output_bias
+        z_o = np.matmul(a_h_1, self.output_weights) + self.output_bias
 
         exp_term = np.exp(z_o)
         #softmax function
@@ -62,23 +72,38 @@ class NeuralNetwork:
     def backpropagation(self):
 
         error_output = self.probabilities - self.Y_data
+        
+        error_hidden_1 = np.matmul(error_output, self.output_weights.T) * self.a_h_1 * (1 - self.a_h_1)
 
-        error_hidden = np.matmul(error_output, self.output_weights.T) * self.a_h * (1 - self.a_h)
+        error_hidden_0 = np.matmul(error_hidden_1, self.hidden_weights_1.T) * self.a_h_0 * (1 - self.a_h_0)
+        
 
-        self.output_weights_gradient = np.matmul(self.a_h.T, error_output)
+        self.output_weights_gradient = np.matmul(self.a_h_1.T, error_output)
         self.output_bias_gradient = np.sum(error_output, axis=0)
+        
+        self.hidden_weights_gradient_1 = np.matmul(self.a_h_0.T, error_hidden_1)
+        self.hidden_bias_gradient_1 = np.sum(error_hidden_1, axis=0)
 
-        self.hidden_weights_gradient = np.matmul(self.X_data.T, error_hidden)
-        self.hidden_bias_gradient = np.sum(error_hidden, axis=0)
+        self.hidden_weights_gradient_0 = np.matmul(self.X_data.T, error_hidden_0)
+        self.hidden_bias_gradient_0 = np.sum(error_hidden_0, axis=0)
+        
 
         if self.lmbd > 0.0:
             self.output_weights_gradient += self.lmbd * self.output_weights
-            self.hidden_weights_gradient += self.lmbd * self.hidden_weights
-
-        self.output_weights -= self.eta * self.output_weights_gradient1
+            
+            self.hidden_weights_gradient_1 += self.lmbd * self.hidden_weights_1
+            
+            self.hidden_weights_gradient_0 += self.lmbd * self.hidden_weights_0
+            
+            
+        self.output_weights -= self.eta * self.output_weights_gradient
         self.output_bias -= self.eta * self.output_bias_gradient
-        self.hidden_weights -= self.eta * self.hidden_weights_gradient
-        self.hidden_bias -= self.eta * self.hidden_bias_gradient
+        
+        self.hidden_weights_1 -= self.eta * self.hidden_weights_gradient_1
+        self.hidden_bias_1 -= self.eta * self.hidden_bias_gradient_1
+        
+        self.hidden_weights_0 -= self.eta * self.hidden_weights_gradient_0
+        self.hidden_bias_0 -= self.eta * self.hidden_bias_gradient_0
 
     def predict(self, X):
         probabilities = self.feed_forward_out(X)
