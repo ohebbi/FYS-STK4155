@@ -1,195 +1,149 @@
-import pandas as pd
-import os
-import numpy as np
-
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score
-
-# Trying to set the seed
-np.random.seed(0)
-import random
-random.seed(0)
-
-# Reading file into data frame
-cwd = os.getcwd()
-filename = cwd + '/datafiles/default of credit card clients.xls'
-nanDict = {}
-df = pd.read_excel(filename, header=1, skiprows=0, index_col=0, na_values=nanDict)
-
-df.rename(index=str, columns={"default payment next month": "defaultPaymentNextMonth"}, inplace=True)
-
-# Features and targets
-X = df.loc[:, df.columns != 'defaultPaymentNextMonth'].values
-y = df.loc[:, df.columns == 'defaultPaymentNextMonth'].values
-
-# Categorical variables to one-hot's
-onehotencoder = OneHotEncoder(categories="auto")
-
-X = ColumnTransformer(
-    [("", onehotencoder, [3]),],
-    remainder="passthrough"
-).fit_transform(X)
-
-y.shape
-
-# Train-test split
-trainingShare = 0.5
-seed  = 1
-XTrain, XTest, yTrain, yTest=train_test_split(X, y, train_size=trainingShare, \
-                                              test_size = 1-trainingShare,
-                                             random_state=seed)
-
-# Input Scaling
-sc = StandardScaler()
-XTrain = sc.fit_transform(XTrain)
-XTest = sc.transform(XTest)
-
-# One-hot's of the target vector
-Y_train_onehot, Y_test_onehot = onehotencoder.fit_transform(yTrain), onehotencoder.fit_transform(yTest)
-
-# Remove instances with zeros only for past bill statements or paid amounts
-'''
-df = df.drop(df[(df.BILL_AMT1 == 0) &
-                (df.BILL_AMT2 == 0) &
-                (df.BILL_AMT3 == 0) &
-                (df.BILL_AMT4 == 0) &
-                (df.BILL_AMT5 == 0) &
-                (df.BILL_AMT6 == 0) &
-                (df.PAY_AMT1 == 0) &
-                (df.PAY_AMT2 == 0) &
-                (df.PAY_AMT3 == 0) &
-                (df.PAY_AMT4 == 0) &
-                (df.PAY_AMT5 == 0) &
-                (df.PAY_AMT6 == 0)].index)
-'''
-df = df.drop(df[(df.BILL_AMT1 == 0) &
-                (df.BILL_AMT2 == 0) &
-                (df.BILL_AMT3 == 0) &
-                (df.BILL_AMT4 == 0) &
-                (df.BILL_AMT5 == 0) &
-                (df.BILL_AMT6 == 0)].index)
-
-df = df.drop(df[(df.PAY_AMT1 == 0) &
-                (df.PAY_AMT2 == 0) &
-                (df.PAY_AMT3 == 0) &
-                (df.PAY_AMT4 == 0) &
-                (df.PAY_AMT5 == 0) &
-                (df.PAY_AMT6 == 0)].index)
-
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import  train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
+import numpy as np
+from sklearn.linear_model import SGDRegressor
+from random import random, seed
 
-lambdas=np.logspace(-5,7,13)
-parameters = [{'C': 1./lambdas, "solver":["lbfgs"]}]#*len(parameters)}]
-scoring = ['accuracy', 'roc_auc']
-logReg = LogisticRegression()
-gridSearch = GridSearchCV(logReg, parameters, cv=5, scoring=scoring, refit='roc_auc')
-# "refit" gives the metric used deciding best model.
-# See more http://scikit-learn.org/stable/auto_examples/model_selection/plot_multi_metric_evaluation.html
-gridSearch.fit(XTrain, yTrain.ravel())
-
-def gridSearchSummary(method, scoring):
-    """Prints best parameters from Grid search
-    and AUC with standard deviation for all
-    parameter combos """
-
-    method = eval(method)
-    if scoring == 'accuracy':
-        mean = 'mean_test_score'
-        sd = 'std_test_score'
-    elif scoring == 'auc':
-        mean = 'mean_test_roc_auc'
-        sd = 'std_test_roc_auc'
-    print("Best: %f using %s" % (method.best_score_, method.best_params_))
-    means = method.cv_results_[mean]
-    stds = method.cv_results_[sd]
-    params = method.cv_results_['params']
-    for mean, stdev, param in zip(means, stds, params):
-        print("%f (%f) with: %r" % (mean, stdev, param))
-
-def createConfusionMatrix(method, printOut=True):
-    """
-    Computes and prints confusion matrices, accuracy scores,
-    and AUC for test and training sets
-    """
-    confusionArray = np.zeros(6, dtype=object)
-    method = eval(method)
-
-    # Train
-    yPredTrain = method.predict(XTrain)
-    yPredTrain = (yPredTrain > 0.5)
-    cm = confusion_matrix(
-        yTrain, yPredTrain)
-    cm = np.around(cm/cm.sum(axis=1)[:,None], 2)
-    confusionArray[0] = cm
-
-    accScore = accuracy_score(yTrain, yPredTrain)
-    confusionArray[1] = accScore
-
-    AUC = roc_auc_score(yTrain, yPredTrain)
-    confusionArray[2] = AUC
-
-    if printOut:
-        print('\n###################  Training  ###############')
-        print('\nTraining Confusion matrix: \n', cm)
-        print('\nTraining Accuracy score: \n', accScore)
-        print('\nTrain AUC: \n', AUC)
-
-    # Test
-    yPred = method.predict(XTest)
-    yPred = (yPred > 0.5)
-    cm = confusion_matrix(
-        yTest, yPred)
-    cm = np.around(cm/cm.sum(axis=1)[:,None], 2)
-    confusionArray[3] = cm
-
-    accScore = accuracy_score(yTest, yPred)
-    confusionArray[4] = accScore
-
-    AUC = roc_auc_score(yTest, yPred)
-    confusionArray[5] = AUC
-
-    if printOut:
-        print('\n###################  Testing  ###############')
-        print('\nTest Confusion matrix: \n', cm)
-        print('\nTest Accuracy score: \n', accScore)
-        print('\nTestAUC: \n', AUC)
-
-    return confusionArray
+#import functions
+from functions.neuralnetwork import NeuralNetwork
+from functions.functions import *
+"""
+Simple filter for sklearn
+"""
+from warnings import simplefilter
+# ignore all future warnings
+simplefilter(action='ignore', category=FutureWarning)
 
 
-import matplotlib.pyplot as plt
-import seaborn
-import scikitplot as skplt
+cancer = load_breast_cancer()
+#print(len(cancer.target))
 
-seaborn.set(style="white", context="notebook", font_scale=1.5,
-            rc={"axes.grid": True, "legend.frameon": False,
-"lines.markeredgewidth": 1.4, "lines.markersize": 10})
-seaborn.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 4.5})
-
-yPred = gridSearch.predict_proba(XTest)
-print(yTest.ravel().shape, yPred.shape)
-
-#skplt.metrics.plot_cumulative_gain(yTest.ravel(), yPred_onehot)
-skplt.metrics.plot_cumulative_gain(yTest.ravel(), yPred)
-
-defaults = sum(yTest == 1)
-total = len(yTest)
-defaultRate = defaults/total
-def bestCurve(defaults, total, defaultRate):
-    x = np.linspace(0, 1, total)
-
-    y1 = np.linspace(0, 1, defaults)
-    y2 = np.ones(total-defaults)
-    y3 = np.concatenate([y1,y2])
-    return x, y3
-
-x, best = bestCurve(defaults=defaults, total=total, defaultRate=defaultRate)
-plt.plot(x, best)
+# Set up training data
+X_train, X_test, y_train, y_test = train_test_split(cancer.data,cancer.target,random_state=0)
 
 
-plt.show()
+# Scale data
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+theta_linreg = np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train)
+#print("Own inversion")
+#print(theta_linreg)
+
+
+n = len(X_train)
+M = 10
+m = int(n/M)
+n_epochs = 150
+
+t0, t1 = 1, 50
+
+#remember to write about the choice of eta (learning rate).
+beta = np.random.randn(len(X_train[0,:]),1)
+
+costfunction_best = 100000
+for epoch in range(n_epochs):
+    for i in range(m):
+        random_index = np.random.randint(m)
+        xi = X_train[random_index:random_index+1]
+        yi = y_train[random_index:random_index+1]
+
+        gradients = 2 * xi.T @ ((xi @ beta)-yi)
+        eta = learning_schedule(epoch*m+i)
+        beta = beta - eta*gradients
+
+        Xbeta = X_train.dot(beta)
+
+        costfunction = y_train.dot( Xbeta ) - np.log( 1 + np.exp( Xbeta )  )
+        #print(costfunction)
+        costfunction = -np.sum(costfunction)
+
+        p = np.exp(Xbeta)/(1+np.exp(Xbeta))
+
+        if (costfunction) < (costfunction_best):
+            costfunction_best = costfunction
+            best_beta = beta
+
+#print("beta from own sdg")
+#print(best_beta, costfunction_best)
+
+
+y_tilde = X_test.dot(best_beta)
+
+I=0
+y_tilde = sigmoid(y_tilde)
+
+for i in range(len(y_tilde)):
+
+    if y_tilde[i]>=0.5:
+        y_tilde[i]=1
+    else:
+        y_tilde[i]=0
+
+    if y_tilde[i] == y_test[i]:
+        I += 1.
+#print (y_tilde)
+accuracy_score = float(I/len(y_tilde))
+print ("-------------------------------------------------")
+print ("--- Logistic Regression with Gradient Descent ---")
+print ("-------------------------------------------------")
+print ("Accuracy score on test set:", accuracy_score)
+
+"""
+sgdreg = SGDRegressor(max_iter = m, penalty=None, eta0=eta)
+sgdreg.fit(X_train,y_train)
+print("beta from sklearn sdg")
+#print(sgdreg.intercept_, sgdreg.coef_)
+"""
+
+"""
+#TEST AGAINST SKLEARN Logistic Regression
+#Logistic regression with sklearn
+logreg = LogisticRegression()
+logreg.fit(X_train, y_train)
+print("Test set accuracy: {:.2f}".format(logreg.score(X_test,y_test)))
+"""
+
+"""
+# remove this if scaling of dataset is not required.
+# Scale data
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train_scaled = scaler.transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+logreg.fit(X_train_scaled, y_train)
+print("Test set accuracy scaled data: {:.2f}".format(logreg.score(X_test_scaled,y_test)))
+"""
+print()
+print ("-------------------------------------------------")
+print ("---------- Artificial Neural Network ------------")
+print ("-------------------------------------------------")
+# building our neural network
+n_inputs, n_features = X_train.shape
+n_hidden_neurons = 100
+n_categories = 2
+
+
+epochs = 100
+batch_size = 100
+lmbd = 0.
+
+
+y_train_onehot = to_categorical_numpy(y_train)
+
+dnn = NeuralNetwork(X_data = X_train,Y_data= y_train_onehot, eta=eta, lmbd=lmbd, epochs=epochs, batch_size=batch_size,
+                    n_hidden_neurons=n_hidden_neurons, n_categories=n_categories)
+dnn.train()
+test_predict = dnn.predict(X_test)
+# equivalent in numpy
+
+print("Accuracy score on test set:", accuracy_score_numpy(y_test, test_predict))
+
+
+
+#print("Accuracy score on test set: ", accuracy_score_numpy(Y_test, test_predict))
