@@ -128,17 +128,6 @@ n_inputs, n_features = X_train.shape
 n_hidden_neurons = 100
 n_categories = 2
 
-#print(X_train.shape)
-
-# we make the weights normally distributed using numpy.random.randn
-
-# weights and bias in the hidden layer
-hidden_weights = np.random.randn(n_features, n_hidden_neurons)
-hidden_bias = np.zeros(n_hidden_neurons) + 0.01
-
-# weights and bias in the output layer
-output_weights = np.random.randn(n_hidden_neurons, n_categories)
-output_bias = np.zeros(n_categories) + 0.01
 
 epochs = 100
 batch_size = 100

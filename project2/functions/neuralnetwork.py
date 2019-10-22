@@ -1,10 +1,6 @@
 import numpy as np
 from functions.functions import *
-class HiddenLayer:
-    def __init__(
-            self,
 
-    )
 class NeuralNetwork:
     def __init__(
             self,
@@ -59,6 +55,7 @@ class NeuralNetwork:
         z_o = np.matmul(a_h, self.output_weights) + self.output_bias
 
         exp_term = np.exp(z_o)
+        #softmax function
         probabilities = exp_term / np.sum(exp_term, axis=1, keepdims=True)
         return probabilities
 
@@ -78,7 +75,7 @@ class NeuralNetwork:
             self.output_weights_gradient += self.lmbd * self.output_weights
             self.hidden_weights_gradient += self.lmbd * self.hidden_weights
 
-        self.output_weights -= self.eta * self.output_weights_gradient
+        self.output_weights -= self.eta * self.output_weights_gradient1
         self.output_bias -= self.eta * self.output_bias_gradient
         self.hidden_weights -= self.eta * self.hidden_weights_gradient
         self.hidden_bias -= self.eta * self.hidden_bias_gradient
