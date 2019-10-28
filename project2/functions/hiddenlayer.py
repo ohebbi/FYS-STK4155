@@ -15,7 +15,7 @@ class HiddenLayer:
 
     def create_biases_and_weights(self):
         self.weights = np.random.randn(self.n_input, self.n_output)
-        print ("Weights:",self.weights.shape)
+
         self.bias = np.zeros(self.n_output) + 0.01
 
 
