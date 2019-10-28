@@ -125,19 +125,20 @@ print ("---------- Artificial Neural Network ------------")
 print ("-------------------------------------------------")
 # building our neural network
 n_inputs, n_features = X_train.shape
-n_hidden_neurons = 100
+n_hidden_neurons = 50
 n_categories = 2
-
+n_hidden_layers = 2
 
 epochs = 100
 batch_size = 100
 lmbd = 0.
-
+eta = 0.1
 
 y_train_onehot = to_categorical_numpy(y_train)
 
-dnn = NeuralNetwork(X_data = X_train,Y_data= y_train_onehot, eta=eta, lmbd=lmbd, epochs=epochs, batch_size=batch_size,
-                    n_hidden_neurons=n_hidden_neurons, n_categories=n_categories)
+dnn = NeuralNetwork(X_data = X_train,Y_data= y_train_onehot,n_hidden_layers=n_hidden_layers,
+                    n_hidden_neurons=n_hidden_neurons, n_categories=n_categories,
+                    epochs=epochs,batch_size=batch_size,eta=eta, lmbd=lmbd)
 dnn.train()
 test_predict = dnn.predict(X_test)
 # equivalent in numpy
