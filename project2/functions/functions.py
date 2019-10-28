@@ -3,7 +3,6 @@ import numpy as np
 
 def sigmoid(x):
     return 1./(1.+np.exp(-x))
-    
 def learning_schedule(t):
     t0, t1 = 1, 50
     return t0/(t+t1)
