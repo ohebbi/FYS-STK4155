@@ -75,7 +75,7 @@ class NeuralNetwork:
             self.output_weights_gradient += self.lmbd * self.output_weights
             self.hidden_weights_gradient += self.lmbd * self.hidden_weights
 
-        self.output_weights -= self.eta * self.output_weights_gradient1
+        self.output_weights -= self.eta * self.output_weights_gradient
         self.output_bias -= self.eta * self.output_bias_gradient
         self.hidden_weights -= self.eta * self.hidden_weights_gradient
         self.hidden_bias -= self.eta * self.hidden_bias_gradient
