@@ -2,7 +2,7 @@ import numpy as np
 from functions.functions import *
 from functions.hiddenlayer import HiddenLayer
 
-class NeuralNetworkRegression:
+class NeuralNetwork:
     def __init__(
             self,
             X_data,

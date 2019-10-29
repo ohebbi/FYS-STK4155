@@ -8,7 +8,6 @@ from random import random, seed
 #import functions
 from functions.neuralnetwork import NeuralNetwork
 from functions.functions import *
-from functions.neuralnetworkregression import NeuralNetworkRegression
 """
 Simple filter for sklearn
 """
@@ -137,7 +136,7 @@ eta = 1e-5
 
 y_train_onehot = to_categorical_numpy(y_train)
 
-dnn = NeuralNetworkRegression(X_data = X_train, Y_data = y_train_onehot, n_hidden_layers=n_hidden_layers,
+dnn = NeuralNetwork(X_data = X_train, Y_data = y_train_onehot, n_hidden_layers=n_hidden_layers,
                     n_hidden_neurons=n_hidden_neurons, n_categories = n_categories,
                     epochs = epochs, batch_size=batch_size, eta=eta, lmbd=lmbd,
                     user_action = 'classification')
@@ -176,7 +175,7 @@ X_train = scaler.transform(X_train)
 n_inputs, n_features = X_train.shape
 n_categories = 1
 
-dnn = NeuralNetworkRegression(X_data = X_train, Y_data = z_train, n_hidden_layers=n_hidden_layers,
+dnn = NeuralNetwork(X_data = X_train, Y_data = z_train, n_hidden_layers=n_hidden_layers,
                     n_hidden_neurons=n_hidden_neurons, n_categories = n_categories,
                     epochs = epochs, batch_size=batch_size, eta=eta, lmbd=lmbd,
                     user_action = 'regression')
