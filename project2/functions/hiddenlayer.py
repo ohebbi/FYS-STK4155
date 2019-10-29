@@ -10,7 +10,7 @@ class HiddenLayer:
 
         self.n_input = n_input
         self.n_output = n_output
-        #self.a_h = 0
+
         self.create_biases_and_weights()
 
     def create_biases_and_weights(self):
@@ -24,19 +24,32 @@ class HiddenLayer:
         self.a_h = sigmoid(self.z_h)
         return self.a_h
 
+    def node_activation_regression(self, X_data):
+        self.z_h = np.matmul(X_data, self.weights) + self.bias
+        #self.a_h = self.z_h
+        self.a_h = sigmoid(self.z_h)
+
+        return self.a_h
+
     def node_activation_out(self,X_data):
         z_h = np.matmul(X_data, self.weights) + self.bias
-        a_h = sigmoid(self.z_h)
+        a_h = sigmoid(z_h)
+        return a_h
+
+    def node_activation_out_regression(self, X_data):
+        z_h = np.matmul(X_data, self.weights) + self.bias
+        a_h = sigmoid(z_h)
         return a_h
 
     def error_layer(self, error_output, weights):
+        #        print(error_output.shape, weights.T.shape, self.a_h.shape)
+
         self.error_hidden = np.matmul(error_output, weights.T) * self.a_h * (1 - self.a_h)
         return self.error_hidden
 
     def gradients(self, a_h, lmbd):
         self.weights_gradient = np.matmul(a_h.T, self.error_hidden)
         self.bias_gradient = np.sum(self.error_hidden, axis=0)
-
         if lmbd > 0.0:
             self.weights_gradient += lmbd * self.weights
 

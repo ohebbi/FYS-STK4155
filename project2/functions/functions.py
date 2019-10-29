@@ -32,10 +32,11 @@ def generate_data(number_points = 20, plott = True):
     x, y = np.meshgrid(x_data,y_data)
 
     z = FrankeFunction(x, y)
+    """
     if plott == True:
         plotter(x,y,z)
         plt.savefig('plots/Franke/frankefunction.pdf')
-
+    """
     #flatten the matrix out
     x = np.ravel(x)
     y = np.ravel(y)
@@ -46,13 +47,86 @@ def generate_data(number_points = 20, plott = True):
 
 
     eps = np.random.normal(0,1,len(z))
-    z += 0.1*eps
+    z += 0.01*eps
 
     return x, y, z
+def MSE(z_data,z_model):
+    """
+    Function:
+    Finds the mean square error for a given model and approximation.
+    Input:
+    Takes an array z_data and z_model.
+    Output:
+    Returns a scalar.
+    """
+    summ = 0
+    for i in range(len(z_data)):
+        summ += (z_data[i] - z_model[i])**2
+    return summ/(len(z_data))
 
+def find_designmatrix(x,y, polygrad=5):
+    """
+    Function:
+    Generates the designmatrix.
+    Input:
+    Takes an array x and y and a polynomial degree.
+    Output:
+    Returns a multidimensional array (designmatrix).
+    """
+    x2 = x*x
+    y2 = y*y
+    x3 = x*x*x
+    y3 = y*y*y
+
+    if (polygrad<1):
+        raise ValueError ("error! polygrad is less than 1!!")
+
+    if polygrad == 1:
+        X = np.c_[np.ones((len(x),1)),x, y] #3
+    elif (polygrad == 2):
+        X = np.c_[np.ones((len(x),1)), #0-degree polynomial
+                     x, y, #1-degree polynomial
+                     x2,y2,x*y] #2-degree polynomial #6
+    elif polygrad == 3:
+        X = np.c_[np.ones((len(x),1)), #0-degree polynomial
+                         x, y, #1-degree polynomial
+                         x2,y2,x*y, #2-degree polynomial
+                         x3,y3,x*y2,x2*y] #3-degree polynomial #10
+    elif polygrad == 4:
+        X = np.c_[np.ones((len(x),1)), #0-degree polynomial
+                         x, y, #1-degree polynomial
+                         x2,y2,x*y, #2-degree polynomial
+                         x3,y3,x*y2,x2*y, #3-degree polynomial
+                         x*x3,y*y3,x3*y,x*y3,x2*y2] #4-degree polynomial #15
+
+    elif polygrad ==5:
+        X = np.c_[np.ones((len(x),1)), #0-degree polynomial
+                     x, y, #1-degree polynomial
+                     x2,y2,x*y, #2-degree polynomial
+                     x3,y3,x*y2,x2*y, #3-degree polynomial
+                     x*x3,y*y3,x3*y,x*y3,x2*y2, #4-degree polynomial
+                     x3*x2,y3*y2,(x2*x2)*y, x*(y2*y2),x3*y2,x2*y3] #5-degree polynomial #21
+
+    #General formula to avoid hardcoding 'too' much.
+    elif (polygrad > 5):
+        X = np.zeros( (len(x), int(0.5*(polygrad + 2)*(polygrad + 1)) ) )
+        poly = 0
+        for i in range(int(polygrad) + 1):
+            for j in range(int(polygrad) + 1 - i):
+                X[:,poly] = np.squeeze((x**i)*(y**j))
+                poly += 1
+    return X
+
+def inv_sigmoid(y):
+    """
+    Improvised scaling.
+    #Do not use y = 1
+    """
+    return np.log(y/(1-y))
 
 def sigmoid(x):
     return 1./(1.+np.exp(-x))
+
 def learning_schedule(t):
     t0, t1 = 1, 50
     return t0/(t+t1)

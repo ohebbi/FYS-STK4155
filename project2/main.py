@@ -8,6 +8,7 @@ from random import random, seed
 #import functions
 from functions.neuralnetwork import NeuralNetwork
 from functions.functions import *
+from functions.neuralnetworkregression import NeuralNetworkRegression
 """
 Simple filter for sklearn
 """
@@ -100,13 +101,13 @@ print("beta from sklearn sdg")
 #print(sgdreg.intercept_, sgdreg.coef_)
 """
 
-"""
+
 #TEST AGAINST SKLEARN Logistic Regression
 #Logistic regression with sklearn
 logreg = LogisticRegression()
 logreg.fit(X_train, y_train)
 print("Test set accuracy: {:.2f}".format(logreg.score(X_test,y_test)))
-"""
+
 
 """
 # remove this if scaling of dataset is not required.
@@ -121,7 +122,7 @@ print("Test set accuracy scaled data: {:.2f}".format(logreg.score(X_test_scaled,
 """
 print()
 print ("-------------------------------------------------")
-print ("---------- Artificial Neural Network ------------")
+print ("-------- classification Neural Network ----------")
 print ("-------------------------------------------------")
 # building our neural network
 n_inputs, n_features = X_train.shape
@@ -129,22 +130,72 @@ n_hidden_neurons = 50
 n_categories = 2
 n_hidden_layers = 2
 
-epochs = 100
+epochs = 300
 batch_size = 100
-lmbd = 0.
-eta = 0.1
+lmbd = 0
+eta = 1e-5
 
 y_train_onehot = to_categorical_numpy(y_train)
 
-dnn = NeuralNetwork(X_data = X_train,Y_data= y_train_onehot,n_hidden_layers=n_hidden_layers,
-                    n_hidden_neurons=n_hidden_neurons, n_categories=n_categories,
-                    epochs=epochs,batch_size=batch_size,eta=eta, lmbd=lmbd)
+dnn = NeuralNetworkRegression(X_data = X_train, Y_data = y_train_onehot, n_hidden_layers=n_hidden_layers,
+                    n_hidden_neurons=n_hidden_neurons, n_categories = n_categories,
+                    epochs = epochs, batch_size=batch_size, eta=eta, lmbd=lmbd,
+                    user_action = 'classification')
 dnn.train()
 test_predict = dnn.predict(X_test)
-# equivalent in numpy
+
 
 print("Accuracy score on test set:", accuracy_score_numpy(y_test, test_predict))
 
+print ("-------------------------------------------------")
+print ("-------------Regression Neural Network-----------")
+print ("-------------------------------------------------")
+
+x,y,z = generate_data() #FrankeFunction
+
+f = z
+#scaling with function sigmoid
+x = sigmoid(x)
+y = sigmoid(y)
+z = sigmoid(z)
+
+x_train, x_test, y_train, y_test, z_train, z_test = train_test_split(x,y,z,random_state=0)
+#z_train = np.reshape(z_train, (20,20))
+
+X_train = find_designmatrix(x_train, y_train, polygrad = 5)
+"""
+scaler.fit(z_train)
+z_train = scaler.transform(z_train)
+z_test = scaler.transform(z_test)
+
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
+"""
 
 
-#print("Accuracy score on test set: ", accuracy_score_numpy(Y_test, test_predict))
+n_inputs, n_features = X_train.shape
+n_categories = 1
+
+dnn = NeuralNetworkRegression(X_data = X_train, Y_data = z_train, n_hidden_layers=n_hidden_layers,
+                    n_hidden_neurons=n_hidden_neurons, n_categories = n_categories,
+                    epochs = epochs, batch_size=batch_size, eta=eta, lmbd=lmbd,
+                    user_action = 'regression')
+
+
+dnn.train()
+X_test = find_designmatrix(x_test, y_test, polygrad = 5)
+
+#X_test = scaler.transform(X_test)
+
+test_predict = dnn.predict_probabilities(X_test)
+
+test_predict = inv_sigmoid(test_predict)
+z_test = inv_sigmoid(z_test)
+
+print(MSE(z_test,test_predict))
+
+
+g = inv_sigmoid(z)
+print(np.mean(f-g))
+
+#def test_scaler():
