@@ -128,7 +128,7 @@ print()
 print ("-------------------------------------------------")
 print ("-------- classification Neural Network ----------")
 print ("-------------------------------------------------")
-"""
+
 # building our neural network
 n_inputs, n_features = X_train.shape
 n_hidden_neurons = 50
@@ -176,7 +176,6 @@ for i, eta in enumerate(eta_vals):
 
         #cumulative gain plot
         if test_accuracy[i][j] > best_data:
-            print("hurra")
 
             best_data = test_accuracy[i][j]
             test_pred_prob = dnn.predict_probabilities(X_test)
@@ -191,7 +190,7 @@ plt.plot(x1,y1,'--',color='darkorange')
 plt.show()
 train_accuracy = DataFrame(train_accuracy, index = eta_vals, columns = lmbd_vals)
 
-fig, ax = plt.subplots(figsize = (6, 6))
+fig, ax = plt.subplots(figsize = (7, 7))
 sns.heatmap(train_accuracy, annot=True, ax=ax, cmap="viridis")
 ax.set_title("Training Accuracy for classification")
 ax.set_ylabel("$\eta$")
@@ -200,19 +199,19 @@ plt.show()
 
 test_accuracy = DataFrame(test_accuracy, index = eta_vals, columns = lmbd_vals)
 
-fig, ax = plt.subplots(figsize = (6, 6))
+fig, ax = plt.subplots(figsize = (7, 7))
 sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
 ax.set_title("Test Accuracy for classification")
 ax.set_ylabel("$\eta$")
 ax.set_xlabel("$\lambda$")
 plt.show()
 
-"""
+
 print ("-------------------------------------------------")
 print ("-------------Regression Neural Network-----------")
 print ("-------------------------------------------------")
 
-x,y,z = generate_data() #FrankeFunction
+x,y,z = generate_data(plott = False) #FrankeFunction
 
 f = z
 #scaling with function sigmoid
@@ -247,7 +246,7 @@ DNN_numpy = np.zeros((len(eta_vals), len(lmbd_vals)), dtype=object)
 
 #Finding designmatrix
 X_test = find_designmatrix(x_test, y_test, polygrad = 5)
-"""
+
 # grid search
 for i, eta in enumerate(eta_vals):
     for j, lmbd in enumerate(lmbd_vals):
@@ -277,26 +276,26 @@ for i, eta in enumerate(eta_vals):
 
 
 
-fig, ax = plt.subplots(figsize = (6, 6))
+fig, ax = plt.subplots(figsize = (7, 7))
 sns.heatmap(train_MSE, annot=True, ax=ax, cmap="viridis")
 ax.set_title("MSE for regression")
 ax.set_ylabel("$\eta$")
 ax.set_xlabel("$\lambda$")
 plt.show()
 
-fig, ax = plt.subplots(figsize = (6, 6))
+fig, ax = plt.subplots(figsize = (7, 7))
 sns.heatmap(test_MSE, annot=True, ax=ax, cmap="viridis")
 ax.set_title("MSE for regression")
 ax.set_ylabel("$\eta$")
 ax.set_xlabel("$\lambda$")
 plt.show()
-"""
+
 
 
 g = inv_sigmoid(z)
 print(np.mean(f-g))
 
-"""
+
 print ("-------------------------------------------------")
 print ("----Sklearn Regression Neural Network-----------")
 print ("-------------------------------------------------")
@@ -304,7 +303,7 @@ print ("-------------------------------------------------")
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import scale
 
-x,y,z = generate_data() #FrankeFunction
+x,y,z = generate_data(plott = False) #FrankeFunction
 
 x_train, x_test, y_train, y_test, z_train, z_test = train_test_split(x,y,z,random_state=0)
 
@@ -312,7 +311,7 @@ X_train = find_designmatrix(x_train, y_train, polygrad = 5)
 
 X_test = find_designmatrix(x_test, y_test, polygrad = 5)
 
-
+#Scaling data
 X_train = scale(X_train)
 z_train = scale(z_train)
 X_test = scale(X_test)
@@ -320,29 +319,28 @@ z_test = scale(z_test)
 
 
 
-# store models for later use
-DNN_scikit = np.zeros((len(eta_vals), len(lmbd_vals)), dtype=object)
-
-for i, eta in enumerate(eta_vals):
-    for j, lmbd in enumerate(lmbd_vals):
-        dnn = MLPRegressor(hidden_layer_sizes=(100), activation='logistic',
-                            alpha=lmbd, learning_rate_init=eta, max_iter = 1000
+dnn = MLPRegressor(hidden_layer_sizes=(100), activation='relu',
+                            max_iter = 1000
                             )
-        dnn.fit(X_train,z_train)
+dnn.fit(X_train,z_train)
 
-        DNN_scikit[i][j] = dnn
+#Printing lambda and eta
+print("NN parameters: ")
 
-        print("Learning rate  = ", eta)
-        print("Lambda = ", lmbd)
-        print("R2 score on test set: ", dnn.score(X_test, z_test))
-        print()
+parameters = dnn.get_params()
 
-"""
+print (u'\u03BB =', parameters["alpha"])
+print (u"\u03B7 =", parameters["learning_rate_init"])
+print("R2 score on test set: ", dnn.score(X_test, z_test))
+print()
+
+
 
 print ("-------------------------------------------------")
 print ("----Sklearn classification Neural Network-----------")
 print ("-------------------------------------------------")
 
+import scikitplot.metrics as skplt
 from sklearn.neural_network import MLPClassifier
 
 cancer = load_breast_cancer()
@@ -350,65 +348,42 @@ cancer = load_breast_cancer()
 X_train, X_test, y_train, y_test = train_test_split(cancer.data,cancer.target,random_state=0)
 
 
-dnn = MLPClassifier(hidden_layer_sizes=(100),
+dnn = MLPClassifier(hidden_layer_sizes=(100), activation = 'logistic',
                               max_iter = 1000)
 dnn.fit(X_train,y_train)
 
+print("NN parameters: ")
+
+#Printing lambda and eta
+parameters = dnn.get_params()
+
+print (u'\u03BB =', parameters["alpha"])
+print (u"\u03B7 =", parameters["learning_rate_init"])
 print("Accuracy score on test set: ", dnn.score(X_test, y_test))
-print()
+
+
+y_train_prob = dnn.predict_proba(X_train)
+y_test_prob = dnn.predict_proba(X_test)
 
 
 
 x0,y0 = best_curve(y_train,0)
 x1,y1 = best_curve(y_train,1)
-skplt.plot_cumulative_gain(y_train,-y_train_prob)
+skplt.plot_cumulative_gain(y_train,y_train_prob)
 plt.title("Cumulative Gains Curve for training data")
 plt.plot(x0,y0,'--',color='royalblue')
 plt.plot(x1,y1,'--',color='darkorange')
 plt.ylim(0,1.05)
-plt.savefig("plots/classification/logreg_training_cumulative.pdf")
+plt.savefig("plots/classification/sklearn_training_cumulative.pdf")
 plt.show()
 
 x0,y0 = best_curve(y_test,0)
 x1,y1 = best_curve(y_test,1)
 
-skplt.plot_cumulative_gain(y_test,-y_test_prob)
+skplt.plot_cumulative_gain(y_test,y_test_prob)
 plt.title("Cumulative Gains Curve for testing data")
 plt.ylim(0,1.05)
 plt.plot(x0,y0,'--',color='royalblue')
 plt.plot(x1,y1,'--',color='darkorange')
-plt.savefig("plots/classification/logreg_test_cumulative.pdf")
+plt.savefig("plots/classification/sklearn_test_cumulative.pdf")
 plt.show()
-
-"""
-train_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
-test_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
-
-for i in range(len(eta_vals)):
-    for j in range(len(lmbd_vals)):
-        dnn = DNN_scikit[i][j]
-
-        train_pred = dnn.predict(X_train)
-        test_pred = dnn.predict(X_test)
-
-        #train_pred = inv_sigmoid(train_pred)
-        #test_pred = inv_sigmoid(test_pred)
-
-        train_accuracy[i][j] = accuracy_score_numpy(z_train, train_pred)
-        test_accuracy[i][j] = accuracy_score_numpy(z_test, test_pred)
-
-
-fig, ax = plt.subplots(figsize = (10, 10))
-sns.heatmap(train_accuracy, annot=True, ax=ax, cmap="viridis")
-ax.set_title("Training Accuracy")
-ax.set_ylabel("$\eta$")
-ax.set_xlabel("$\lambda$")
-plt.show()
-
-fig, ax = plt.subplots(figsize = (10, 10))
-sns.heatmap(test_accuracy, annot=True, ax=ax, cmap="viridis")
-ax.set_title("Test Accuracy")
-ax.set_ylabel("$\eta$")
-ax.set_xlabel("$\lambda$")
-plt.show()
-"""
