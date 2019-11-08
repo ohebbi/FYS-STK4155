@@ -64,7 +64,7 @@ def R2(z_data, z_model):
     Returns a scalar.
     """
     return (1 - np.sum( (z_data - z_model)**2 ) / np.sum((z_data - np.mean(z_data))**2))
-    
+
 def plotter(x,y,z):
     """
     Function:
@@ -157,19 +157,56 @@ def find_designmatrix(x,y, polygrad=5):
 
 def inv_sigmoid(y):
     """
-    Improvised scaling.
-    #Do not use y = 1
+    Function:
+    Scales the input back after being scaled with sigmoid
+    Input:
+    Takes an input scalar, list, array or matrix
+    Output:
+    Returns the inverse version of the input
     """
+    if type(y)==int:
+        if y == 1:
+            msg = "Inverse of sigmoid is not defined for y=1"
+            raise TypeError(msg)
+    if type(y)==list:
+        for i in y:
+            if i == 1:
+                msg = "Inverse of sigmoid is not defined for y=1"
+                raise TypeError(msg)
     return np.log(y/(1-y))
 
 def sigmoid(x):
+    """
+    Function:
+    Scales the input after sigmoid
+    Input:
+    Takes an input scalar, list, array or matrix
+    Output:
+    Returns the scaled version of the input
+    """
     return 1./(1.+np.exp(-x))
 
 def learning_schedule(t):
+    """
+    Function:
+    Learning schedule for stochastic gradient method
+    Input:
+    Takes an input scalar, list, array or matrix
+    Output:
+    Returns the scaled version of the input
+    """
     t0, t1 = 1, 50
     return t0/(t+t1)
 
 def to_categorical_numpy(integer_vector):
+    """
+    Function:
+    Onehots a vector
+    Input:
+    Takes an array
+    Output:
+    Returns two-dim. array
+    """
     n_inputs = len(integer_vector)
     n_categories = np.max(integer_vector) + 1
     onehot_vector = np.zeros((n_inputs, n_categories))
@@ -178,9 +215,28 @@ def to_categorical_numpy(integer_vector):
     return onehot_vector
 
 def accuracy_score_numpy(Y_test, Y_pred):
+    """
+    Function:
+    Returns the accuracy score
+    Input:
+    Takes an input array Y_test and a corresponding prediction Y_pred
+    Output:
+    Returns a scalar.
+    """
+    if len(Y_test) != len(Y_pred):
+        msg = ("The length of Y_test and Y_pred is not equal", Y_test.shape, Y_pred.shape)
+        raise ValueError(msg)
     return np.sum(Y_test == Y_pred) / len(Y_test)
 
 def best_curve(y,summ):
+    """
+    Function:
+    Finds the ideal curve for a cumulative gain curve
+    Input:
+    Takes an array y and the class 0 or 1 as summ
+    Output:
+    Returns array x and array y3 
+    """
 	defaults = sum(y == summ)
 	total = len(y)
 	x = np.linspace(0, 1, total)
