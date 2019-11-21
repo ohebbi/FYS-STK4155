@@ -5,14 +5,14 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 import tqdm as tqdm
 
-# Filter out Warnings
-TF_CPP_MIN_LOG_LEVEL=2
+# The Neural Network doesn't use Forward Euler
+# Therefore it doens't need to follow the stability criteria
 
-dx = 0.01
-x_np = np.linspace(0,1,1.0/dx)
+dx = 0.1
+x_np = np.linspace(0,1,int(1.0/dx))
 
-dt = dx*dx*0.5
-t_np = np.linspace(0,1,1.0/dt)
+dt = 0.1
+t_np = np.linspace(0,1,int(1.0/dt))
 
 X,T = np.meshgrid(x_np, t_np)
 
@@ -27,8 +27,8 @@ t = tf.reshape(tf.convert_to_tensor(t),shape=(-1,1))
 
 points = tf.concat([x,t],1)
 
-num_iter = 1000
-num_hidden_neurons = [50]
+num_iter = 100000
+num_hidden_neurons = [90]
 
 X = tf.convert_to_tensor(X)
 T = tf.convert_to_tensor(T)
@@ -87,8 +87,8 @@ with tf.Session() as sess:
 diff = np.abs(g_analytic - g_dnn)
 print('Max absolute difference between analytical solution and TensorFlow DNN = ',np.max(diff))
 
-G_analytic = g_analytic.reshape((int(1/dt),int(1/dx)))
-G_dnn = g_dnn.reshape((int(1/dt),int(1/dx)))
+G_analytic = g_analytic.reshape((int(1.0/dt),int(1.0/dx)))
+G_dnn = g_dnn.reshape((int(1.0/dt),int(1.0/dx)))
 
 diff = np.abs(G_analytic - G_dnn)
 
@@ -117,8 +117,10 @@ s = ax.plot_surface(X,T,diff,linewidth=0,antialiased=False,cmap=cm.viridis)
 ax.set_xlabel('Time $t$')
 ax.set_ylabel('Position $x$');
 
-## Take some 3D slices
 
+# I think the plots for the 2D is wrong, maybe because of wrong slicing below
+
+## Take some 3D slices
 indx1 = 0
 indx2 = int((1/dt)/2)
 indx3 = int(1/dt)-1
