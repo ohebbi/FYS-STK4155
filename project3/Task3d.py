@@ -37,36 +37,22 @@ A[5][4] = -1
 # Defining the 6x6 identity matrix
 I = np.identity(6)
 
-q = np.zeros(6)
-#t[1] = 1
-#t = np.linspace(0,1,6)
+dt = np.ones(6)
+
 t = np.random.rand(6)
-# Initial guess
-exact = np.array([0.23192061,  0.41790651, -0.52112089, -0.23192061,  0.52112089, -0.41790651])
-#x0 = np.ones(6)
-#x0[0] = 2
-#x0[0] = 4
-#x0[0] = 6
-#x0[0] = 8
-#x0[0] = 10
-#x0[0] = 12
-#x0 = np.random.rand(6)
-#x = np.linspace(0,1,6)
-#t = np.linspace(0,1,6)
+
+
 
 # The construction phase
 # Convert the values the trial solution is evaluated at to a tensor.
 zeros = tf.convert_to_tensor(np.zeros(t.shape))
-#t_tf = tf.convert_to_tensor(t)
-I_tf = tf.convert_to_tensor(I)
-#x0_tf = tf.reshape(tf.convert_to_tensor(x0),shape=(-1,1))
-t_tf = tf.reshape(tf.convert_to_tensor(t),shape=(-1,1))
-q_tf = tf.reshape(tf.convert_to_tensor(q),shape=(-1,1))
-exact_tf = tf.reshape(tf.convert_to_tensor(exact),shape=(-1,1))
-#points = tf.concat([t],1)
 
-num_iter = 100000 # 10^6 gives 0.0029 absolute error, but takes like 20 min
-num_hidden_neurons = [150, 50, 25]
+I_tf = tf.convert_to_tensor(I)
+t_tf = tf.reshape(tf.convert_to_tensor(t),shape=(-1,1))
+dt_tf = tf.reshape(tf.convert_to_tensor(dt),shape=(-1,1))
+
+num_iter = 1000000
+num_hidden_neurons = [100] # Number of hidden neurons in each layer
 
 points = tf.concat([t_tf],1)
 
@@ -75,6 +61,7 @@ with tf.variable_scope('dnn'):
     num_hidden_layers = np.size(num_hidden_neurons)
 
     previous_layer = points
+    #previous_layer = t_tf
 
     for l in range(num_hidden_layers):
         current_layer = tf.layers.dense(previous_layer, num_hidden_neurons[l],activation=tf.nn.sigmoid)
@@ -82,11 +69,6 @@ with tf.variable_scope('dnn'):
 
     dnn_output = tf.layers.dense(previous_layer, 1)
 
-
-
-## Define the trial solution and cost function
-def x(t1):
-    return t1
 
 
 def f(x):
@@ -99,44 +81,37 @@ def f(x):
 
     B = xTxA + (1 - xTAx)*I_tf
     return ( tf.linalg.matmul(B, x) )
-    #return ( (tf.transpose(x).tf.dot(x).dot(A) + (1 - tf.transpose(x).dot(A).dot(x)).dot(I)).dot(x) )
 
-def lhs(x):
-
-    Ax = tf.linalg.matmul(A,x)
-    return Ax
-def rhs(x):
-    xT = tf.transpose(x)
-    Ax = tf.linalg.matmul(A,x)
-    xTAx = tf.linalg.matmul(xT, Ax)
-    xTx = tf.linalg.matmul(xT,x)
-
-    return (xTAx/xTx)*x
 
 with tf.name_scope('loss'):
-    g_trial = x(t_tf)*dnn_output # x(t)
+    # Define the trial solution
+    g_trial = dnn_output  # x(t)
 
-    g_trial_dt =  tf.gradients(g_trial,t_tf)
-    right_side = f(x(t_tf)) - x(t_tf)
+    # Define the gradient of the trial solution
+    g_trial_dt = tf.gradients(g_trial, dnn_output) # dx/dt
+
+    right_side = f(g_trial) - g_trial # -x(t) + f(x(t))
+
+    # Define the cost function
+    loss = tf.losses.mean_squared_error(tf.reshape(g_trial_dt,shape=[6,1]), right_side)
+
+    """
+    #Using the analytical eigenvalue to calculate the numerical eigenvalue
 
     vT = tf.transpose(g_trial)
-    Av = tf.linalg.matmul(A,g_trial)
+    Av = tf.linalg.matmul(A, g_trial)
     vTAv = tf.linalg.matmul(vT, Av)
-
     vTv = tf.linalg.matmul(vT, g_trial)
-
     eig = (vTAv/vTv)
 
-    #eigenvalue = eig.eval()
-
-
-    #loss = tf.losses.mean_squared_error(tf.reshape(zeros,shape=[6,1]), g_trial_dt[0] - right_side)
     loss = tf.losses.mean_squared_error(tf.reshape(g_analytic[-1],shape=[1,1]), eig)
-
+    """
 
 learning_rate = 1e-2
 with tf.name_scope('train'):
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    #optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+    optimizer = tf.train.AdamOptimizer()
+
     training_op = optimizer.minimize(loss)
 
 init = tf.global_variables_initializer()
@@ -144,7 +119,7 @@ init = tf.global_variables_initializer()
 g_dnn = None
 
 
-
+best_fit = 100
 ## The execution phase
 with tf.Session() as sess:
     init.run()
@@ -152,15 +127,22 @@ with tf.Session() as sess:
         sess.run(training_op)
 
          #If one desires to see how the cost function behaves during training
-        if i % 100 == 0:
-            print(loss.eval())
+        #if i % 100 == 0:
+            #print(loss.eval())
 
+        if loss.eval() < best_fit:
+            g_trial1 = g_trial
+            best_fit = loss.eval()
+    print("\n MSE: \n", best_fit)
+
+    b = sess.run(g_trial_dt)
+    print("\n tf.gradient of g_trial: \n", b)
     g_analytic = g_analytic.eval()
 
-    g_dnn = g_trial.eval()
+    g_dnn = g_trial1.eval()
 
     v = g_dnn
-    print("\n vector", v)
+    print("\n Numerical eigenvector \n", v)
     vT = tf.transpose(v)
     Av = tf.linalg.matmul(A,v)
     vTAv = tf.linalg.matmul(vT, Av)
@@ -171,11 +153,11 @@ with tf.Session() as sess:
     eigenvalue = eig.eval()
 
 ## Compare with the analytical solution
-print("\n Analytic", g_analytic)
-print("\n Numerical", eigenvalue)
+print("\n Analytical eigenvalues: \n", g_analytic)
+print("\n Numerical eigenvalue \n", eigenvalue)
 diff = np.abs(g_analytic[-1] - eigenvalue)
 print("\n")
-print('Max absolute difference between analytical solution and TensorFlow DNN = ',np.max(diff))
+print('Absolute difference between analytical solution and TensorFlow DNN = ',np.max(diff))
 
 #G_analytic = g_analytic.reshape(6, 1)
 #Eigenvalue = eigenvalue.reshape(6, 1)
