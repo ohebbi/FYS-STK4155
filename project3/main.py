@@ -17,95 +17,80 @@ dx      =   float(input())
 # Number of integration points along x-axis
 N       =   int(1.0/dx)
 
+# Step length in time
+dt      =   0.5*dx*dx
+# Number of time steps till final time
+T       =   int(1.0/dt)
+
 L = 1
-#x = numpy.linspace (0,1,N+2)
-#t = np.linspace(0,1,T)
-#alpha = dt/(dx**2)
-
-#u = np.zeros((t.size,x.size))
-#u1 = np.zeros((t.size,x.size))
-#u2 = np.zeros((t.size,x.size))
-#u3 = np.zeros((t.size,x.size))
-
-
-#Initial codition
-#u[0,:] = g(x)
-#u[0,0] = u[0,N+1] = 0.0 #Implement boundaries rigidly
+x = numpy.linspace (0,1,N+2)
+t = np.linspace(0,1,T)
+alpha = dt/(dx**2)
 
 
 
 
-#print "Please select method 1,2, or 3!"
+
+
 
 
 # Define method to use 1 = explicit scheme, 2= implicit scheme, 3 = Crank-Nicolson
-print("Which PDE solver do you want to run")
-print("Forward Euler - Explicit Scheme: Write 'FE'")
-print("Backward Euler - Implicitt Scheme: Write 'BE'")
-print("Crank-Nicolson - Implicitt Scheme: Write 'CN'")
+print("The PDE solvers you execute are:")
+print("Forward Euler - Explicit Scheme")
+print("Backward Euler - Implicitt Scheme")
+print("Crank-Nicolson - Implicitt Scheme")
 
 
-#Task = input("Write here: ")
 
 """
 -------------
 Forward Euler - Explicit Scheme:
 -------------
 """
-#if Task == "FE":
+uf = np.zeros((t.size,x.size))
 
 
-# Step length in time
-dt      =   0.5*dx*dx
-# Number of time steps till final time
-T       =   int(1.0/dt)
+#Initial codition
+uf[0,:] = g(x)
+uf[0,0] = uf[0,N+1] = 0.0 #Implement boundaries rigidly
 
-x = numpy.linspace (0,1,N+2)
-t = np.linspace(0,1,T)
-alpha = dt/(dx**2)
-
-u1 = np.zeros((t.size,x.size))
-u1[0,:] = g(x)
-u1[0,0] = u1[0,N+1] = 0.0 #Implement boundaries rigidly
+forward_euler(alpha,uf,N,T)
 
 
-forward_euler(alpha,u1,N,T)
 
 """
 -------------
 Backward Euler - Implicitt Scheme
 -------------
 """
-#if Task == "BE":
 
-# Step length in time
-dt1       =   dx
-# Number of time steps till final time
-T1       =   int(1.0/dt1)
-
-t1 = np.linspace(0,1,T1)
-alpha1 = dt1/(dx**2)
-
-u2 = np.zeros((t1.size,x.size))
-u2[0,:] = g(x)
-u2[0,0] = u2[0,N+1] = 0.0 #Implement boundaries rigidly
+ub = np.zeros((t.size,x.size))
 
 
-backward_euler(alpha1,u2,N,T1)
+#Initial codition
+ub[0,:] = g(x)
+ub[0,0] = ub[0,N+1] = 0.0 #Implement boundaries rigidly
+
+backward_euler(alpha,ub,N,T)
+
+
 
 """
 -------------
 Crank-Nicolson - Implicitt Scheme
 -------------
 """
-#if Task == "CN":
+
+uc = np.zeros((t.size,x.size))
 
 
-u3 = np.zeros((t1.size,x.size))
-u3[0,:] = g(x)
-u3[0,0] = u3[0,N+1] = 0.0 #Implement boundaries rigidly
+#Initial codition
+uc[0,:] = g(x)
+uc[0,0] = uc[0,N+1] = 0.0 #Implement boundaries rigidly
 
-crank_nicolson(alpha1,u3,N,T1)
+crank_nicolson(alpha,uc,N,T)
+
+
 
 """
 -------------
@@ -113,7 +98,6 @@ Plotting
 -------------
 """
 
-x1,t1 = np.meshgrid(x,t1)
 x,t = np.meshgrid(x,t)
 
 
@@ -122,7 +106,7 @@ x,t = np.meshgrid(x,t)
 fig = plt.figure();
 ax = fig.gca(projection='3d');
 # Plot the surface.
-surf = ax.plot_surface(x, t, u1, cmap=cm.coolwarm,
+surf = ax.plot_surface(x, t, uf, cmap=cm.coolwarm,
                    linewidth=0, antialiased=False);
                    # Customize the z axis.
 ax.set_zlim(-0.10, 1.40);
@@ -138,7 +122,7 @@ plt.show()
 fig = plt.figure();
 ax = fig.gca(projection='3d');
 # Plot the surface.
-surf = ax.plot_surface(x1, t1, u2, cmap=cm.coolwarm,
+surf = ax.plot_surface(x, t, ub, cmap=cm.coolwarm,
                    linewidth=0, antialiased=False);
                    # Customize the z axis.
 ax.set_zlim(-0.10, 1.40);
@@ -154,7 +138,7 @@ plt.show()
 fig = plt.figure();
 ax = fig.gca(projection='3d');
 # Plot the surface.
-surf = ax.plot_surface(x1, t1, u3, cmap=cm.coolwarm,
+surf = ax.plot_surface(x, t, uc, cmap=cm.coolwarm,
                    linewidth=0, antialiased=False);
                    # Customize the z axis.
 ax.set_zlim(-0.10, 1.40);
@@ -171,39 +155,76 @@ x_analytic = np.linspace(0,L, N+2)
 analytic = np.sin(np.pi*x_analytic)*np.exp(-np.pi**2*t[0][0])
 fig = plt.figure();
 plt.title("Numerical vs analytical solution for t = 0")
-plt.plot(x[0],u1[0], ".")
-plt.plot(x1[0],u2[0], ".")
-plt.plot(x1[0],u3[0], ".")
-plt.plot(x_analytic,analytic)
+plt.plot(x[0], uf[0], ".")
+plt.plot(x[0], ub[0], ".")
+plt.plot(x[0], uc[0], ".")
+plt.plot(x_analytic, analytic)
 #plt.legend(["Numeric", "Analytic"])
 plt.legend(["FE", "BE", "CN", "Analytic"])
 
 plt.show()
 
+print("\n Time = 0 \n")
+print("\n Max difference between Forward Euler & Analytic \n")
+print(np.max(abs(uf[0]-analytic)))
+
+print("\n Max difference between Backward Euler & Analytic \n")
+print(np.max(abs(ub[0]-analytic)))
+
+print("\n Max difference between Crank-Nicolson & Analytic \n")
+print(np.max(abs(uc[0]-analytic)))
 
 analytic = np.sin(np.pi*x_analytic)*np.exp(-np.pi**2*t[int(T/2)][0])
 fig = plt.figure();
 plt.title("Numerical vs analytical solution for t = 0.5")
-plt.plot(x[0],u1[int(T/2)], ".")
-plt.plot(x1[0],u2[int(T1/2)], ".")
-plt.plot(x1[0],u3[int(T1/2)], ".")
-plt.plot(x_analytic,analytic)
+plt.plot(x[0], uf[int(T/2)], ".")
+plt.plot(x[0], ub[int(T/2)], ".")
+plt.plot(x[0], uc[int(T/2)], ".")
+plt.plot(x_analytic, analytic)
 plt.legend(["FE", "BE", "CN", "Analytic"])
 #plt.legend(["Numeric", "Analytic"])
 plt.show()
 
+print("\n Time = 0.5 \n")
+print("\n Max difference between Forward Euler & Analytic \n")
+print(np.max(abs(uf[int(T/2)]-analytic)))
+
+print("\n Max difference between Backward Euler & Analytic \n")
+print(np.max(abs(ub[int(T/2)]-analytic)))
+
+print("\n Max difference between Crank-Nicolson & Analytic \n")
+print(np.max(abs(uc[int(T/2)]-analytic)))
 
 analytic = np.sin(np.pi*x_analytic)*np.exp(-np.pi**2*t[T-1][0])
 fig = plt.figure();
 plt.title("Numerical vs analytical solution for t = 1")
-plt.plot(x[0],u1[T-1], ".")
-plt.plot(x1[0],u2[T1-1], ".")
-plt.plot(x1[0],u3[T1-1], ".")
-plt.plot(x_analytic,analytic)
+plt.plot(x[0], uf[T-1], ".")
+plt.plot(x[0], ub[T-1], ".")
+plt.plot(x[0], uc[T-1], ".")
+plt.plot(x_analytic, analytic)
 plt.legend(["FE", "BE", "CN", "Analytic"])
 #plt.legend(["Numeric", "Analytic"])
 plt.show()
 
+print("\n Time = 1 \n")
+print("\n Max difference between Forward Euler & Analytic \n")
+print(np.max(abs(uf[T-1]-analytic)))
+
+print("\n Max difference between Backward Euler & Analytic \n")
+print(np.max(abs(ub[T-1]-analytic)))
+
+print("\n Max difference between Crank-Nicolson & Analytic \n")
+print(np.max(abs(uc[T-1]-analytic)))
+
+
+print("\n Max difference between Forward Euler & Backward Euler \n")
+print(np.max(abs(uf-ub)))
+
+print("\n Max difference between Forward Euler & Crank-Nicolson \n")
+print(np.max(abs(uf-uc)))
+
+print("\n Max difference between Crank-Nicolson & Backward Euler \n")
+print(np.max(abs(uc-ub)))
 
 
 
