@@ -24,15 +24,13 @@ def forward_euler(alpha,u,N,T):
     for t in range(1,T):
         forward_step(alpha, u[t], u[t-1], N)
 
-def tridiag(u, u_prev, alpha, N, string = "BE"):
+def tridiag(u, u_prev, alpha, N):
     """
     Tridiagonal gaus-eliminator, specialized to diagonal = 1+2*alpha,
     super- and sub- diagonal = - alpha
     """
-    if string == "CN":
-        diag = 2+2*alpha
-    else:
-        diag = 1+2*alpha
+
+    diag = 1+2*alpha
 
     offdiag = -alpha
     d = numpy.zeros(N+1)
