@@ -29,9 +29,7 @@ def tridiag(u, u_prev, alpha, N):
     Tridiagonal gaus-eliminator, specialized to diagonal = 1+2*alpha,
     super- and sub- diagonal = - alpha
     """
-
     diag = 1+2*alpha
-
     offdiag = -alpha
     d = numpy.zeros(N+1)
     d[0] = diag
