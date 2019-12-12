@@ -7,10 +7,12 @@ import tqdm as tqdm
 import os
 
 
+
+
 # Defining analytical eigenvalues
 j = np.array([1,2,3,4,5,6])
 jpi = j*np.pi
-g_analytic = 2-2*tf.cos(jpi/(len(j)+1))
+x_analytic = 2-2*tf.cos(jpi/(len(j)+1))
 
 # Defining a 6x6 matrix with only zeros
 A = np.zeros((6, 6))
@@ -39,35 +41,34 @@ I = np.identity(6)
 
 dt = np.ones(6)
 
-t = np.random.rand(6)
+x0 = np.random.rand(6)
 
 
 
 # The construction phase
 # Convert the values the trial solution is evaluated at to a tensor.
-zeros = tf.convert_to_tensor(np.zeros(t.shape))
 
 I_tf = tf.convert_to_tensor(I)
-t_tf = tf.reshape(tf.convert_to_tensor(t),shape=(-1,1))
+x0_tf = tf.convert_to_tensor(np.random.random_sample(size = (1,6)))
 dt_tf = tf.reshape(tf.convert_to_tensor(dt),shape=(-1,1))
 
-num_iter = 1000000
+num_iter = 30000
 num_hidden_neurons = [100] # Number of hidden neurons in each layer
 
-points = tf.concat([t_tf],1)
+points = tf.concat([x0_tf],1)
 
 
 with tf.variable_scope('dnn'):
     num_hidden_layers = np.size(num_hidden_neurons)
 
-    previous_layer = points
-    #previous_layer = t_tf
+    #previous_layer = points
+    previous_layer = x0_tf
 
     for l in range(num_hidden_layers):
         current_layer = tf.layers.dense(previous_layer, num_hidden_neurons[l],activation=tf.nn.sigmoid)
         previous_layer = current_layer
 
-    dnn_output = tf.layers.dense(previous_layer, 1)
+    dnn_output = tf.layers.dense(previous_layer, 6)
 
 
 
@@ -79,35 +80,38 @@ def f(x):
     xTA = tf.linalg.matmul(xT, A)
     xTAx = tf.linalg.matmul(xTA, x)
 
-    B = xTxA + (1 - xTAx)*I_tf
+    B = xTxA - (1 - xTAx)*I_tf
     return ( tf.linalg.matmul(B, x) )
+
+def cost_func(x):
+
+    xTxA = (tf.tensordot(tf.transpose(x), x, axes=1)*A)
+    # (1- xTAx)*I
+    xTAxI = (1- tf.tensordot(tf.transpose(x), tf.tensordot(A, x, axes=1), axes=1))*np.eye(6)
+    # (xTx*A - (1- xTAx)*I)*x
+    f = tf.tensordot((xTxA + xTAxI), x, axes=1)
+
+    return(f)  # x(t))
 
 
 with tf.name_scope('loss'):
     # Define the trial solution
-    g_trial = dnn_output  # x(t)
+    print("dnn_output = ", dnn_output)
 
-    # Define the gradient of the trial solution
-    g_trial_dt = tf.gradients(g_trial, dnn_output) # dx/dt
+    x_trial = tf.transpose(dnn_output)  # x(t)
 
-    right_side = f(g_trial) - g_trial # -x(t) + f(x(t))
+    print("x_trial = ", x_trial)
+    #right_side = f(x_trial) # -x(t) + f(x(t))
+    right_side = tf.transpose(cost_func(x_trial))
 
+    print(right_side)
+
+    x_trial = tf.transpose(x_trial)  # x(t)
     # Define the cost function
-    loss = tf.losses.mean_squared_error(tf.reshape(g_trial_dt,shape=[6,1]), right_side)
+    loss = tf.losses.mean_squared_error(right_side, x_trial)
 
-    """
-    #Using the analytical eigenvalue to calculate the numerical eigenvalue
 
-    vT = tf.transpose(g_trial)
-    Av = tf.linalg.matmul(A, g_trial)
-    vTAv = tf.linalg.matmul(vT, Av)
-    vTv = tf.linalg.matmul(vT, g_trial)
-    eig = (vTAv/vTv)
-
-    loss = tf.losses.mean_squared_error(tf.reshape(g_analytic[-1],shape=[1,1]), eig)
-    """
-
-learning_rate = 1e-2
+learning_rate = 1e-1
 with tf.name_scope('train'):
     #optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     optimizer = tf.train.AdamOptimizer()
@@ -116,121 +120,37 @@ with tf.name_scope('train'):
 
 init = tf.global_variables_initializer()
 
-g_dnn = None
+x_dnn = None
 
 
-best_fit = 100
+
+losses = []
 ## The execution phase
 with tf.Session() as sess:
     init.run()
-    for i in tqdm.tqdm(range(num_iter)):
+    for i in range(num_iter):
         sess.run(training_op)
 
-         #If one desires to see how the cost function behaves during training
-        #if i % 100 == 0:
-            #print(loss.eval())
+        if i % 100 == 0:
+            l = loss.eval()
+            print("Step:", i, "/",num_iter, "loss: ", l, "Eigenvalue:" , x_trial.eval() @ (A @ x_trial.eval().T) / (x_trial.eval() @ x_trial.eval().T))
 
-        if loss.eval() < best_fit:
-            g_trial1 = g_trial
-            best_fit = loss.eval()
-    print("\n MSE: \n", best_fit)
+            losses.append(l)
 
-    b = sess.run(g_trial_dt)
-    print("\n tf.gradient of g_trial: \n", b)
-    g_analytic = g_analytic.eval()
 
-    g_dnn = g_trial1.eval()
 
-    v = g_dnn
-    print("\n Numerical eigenvector \n", v)
-    vT = tf.transpose(v)
-    Av = tf.linalg.matmul(A,v)
-    vTAv = tf.linalg.matmul(vT, Av)
+    x_analytic = x_analytic.eval()
 
-    vTv = tf.linalg.matmul(vT, v)
+    x_dnn = x_trial.eval()
+x_dnn = x_dnn.T
 
-    eig = (vTAv/vTv)
-    eigenvalue = eig.eval()
+
+eigenvalue = x_dnn.T @ (A @ x_dnn) / (x_dnn.T @ x_dnn)
+
 
 ## Compare with the analytical solution
-print("\n Analytical eigenvalues: \n", g_analytic)
-print("\n Numerical eigenvalue \n", eigenvalue)
-diff = np.abs(g_analytic[-1] - eigenvalue)
+print("\n Analytical Eigenvalues: \n", x_analytic)
+print("\n Final Numerical Eigenvalue \n", eigenvalue)
+diff = np.min(abs(x_analytic - eigenvalue))
 print("\n")
-print('Absolute difference between analytical solution and TensorFlow DNN = ',np.max(diff))
-
-#G_analytic = g_analytic.reshape(6, 1)
-#Eigenvalue = eigenvalue.reshape(6, 1)
-
-#diff = np.abs(G_analytic - G_dnn)
-
-
-"""
-# Plot the results
-
-X,T = np.meshgrid(x_np, t_np)
-
-fig = plt.figure(figsize=(10,10))
-ax = fig.gca(projection='3d')
-ax.set_title('Solution from the deep neural network w/ %d layer'%len(num_hidden_neurons))
-s = ax.plot_surface(X,T,G_dnn,linewidth=0,antialiased=False,cmap=cm.viridis)
-ax.set_ylabel('Time $t$')
-ax.set_xlabel('Position $x$');
-
-fig = plt.figure(figsize=(10,10))
-ax = fig.gca(projection='3d')
-ax.set_title('Analytical solution')
-s = ax.plot_surface(X,T,G_analytic,linewidth=0,antialiased=False,cmap=cm.viridis)
-ax.set_ylabel('Time $t$')
-ax.set_xlabel('Position $x$');
-
-fig = plt.figure(figsize=(10,10))
-ax = fig.gca(projection='3d')
-ax.set_title('Difference')
-s = ax.plot_surface(X,T,diff,linewidth=0,antialiased=False,cmap=cm.viridis)
-ax.set_ylabel('Time $t$')
-ax.set_xlabel('Position $x$');
-
-
-# I think the plots for the 2D is wrong, maybe because of wrong slicing below
-
-## Take some 3D slices
-indx1 = 0
-indx2 = int((1/dt)/2)
-indx3 = int(1/dt)-1
-
-t1 = t_np[indx1]
-t2 = t_np[indx2]
-t3 = t_np[indx3]
-
-# Slice the results from the DNN
-res1 = G_dnn[indx1,:]
-res2 = G_dnn[indx2,:]
-res3 = G_dnn[indx3,:]
-
-# Slice the analytical results
-res_analytical1 = G_analytic[indx1,:]
-res_analytical2 = G_analytic[indx2,:]
-res_analytical3 = G_analytic[indx3,:]
-
-# Plot the slices
-plt.figure(figsize=(10,10))
-plt.title("Computed solutions at time = %g"%t1)
-plt.plot(x_np, res1, "o")
-plt.plot(x_np,res_analytical1)
-plt.legend(['dnn','analytical'])
-
-plt.figure(figsize=(10,10))
-plt.title("Computed solutions at time = %g"%t2)
-plt.plot(x_np, res2, "o")
-plt.plot(x_np,res_analytical2)
-plt.legend(['dnn','analytical'])
-
-plt.figure(figsize=(10,10))
-plt.title("Computed solutions at time = %g"%t3)
-plt.plot(x_np, res3, "o")
-plt.plot(x_np,res_analytical3)
-plt.legend(['dnn','analytical'])
-
-plt.show()
-"""
+print('Absolute difference between Analytical Eigenvalue and TensorFlow DNN = ',np.max(diff))
