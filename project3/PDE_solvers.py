@@ -174,14 +174,10 @@ def crank_nicolson(alpha,u,N,T):
     """
     Implents crank-nicolson scheme, reusing code from forward- and backward euler
     """
-
-
     for t in range(1,T):
         u_temp = u.copy()
-        #u_temp1 = u.copy()
         forward_step(alpha, u_temp[t], u_temp[t-1], N, "CN")
         tridiag(u[t], u_temp[t], alpha, N, "CN")
-        #u[t] = u_temp1[t]
 
 
 def g(x):
