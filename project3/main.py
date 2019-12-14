@@ -6,6 +6,7 @@ from matplotlib.pyplot import cm
 import numpy as np
 import os
 from PDE_solvers import *
+from NN_Eigenvalue_solver import *
 
 print("\n Project 3: Neural Network vs PDE's & Eigenvalue Problems")
 print(" Which Project Task do you want to run?: ")
@@ -108,12 +109,12 @@ if Task == "1":
     """
 
 
+    # Defining variables
+    num_iter = 100000 # Number of iterations
+    num_hidden_neurons = [90] # Number of hidden neurons in each layer
+    string = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
+    learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
 
-    num_iter = 100000
-    num_hidden_neurons = [90]
-    string = "Adam"
-    # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
-    learning_rate = 0.0
 
     print("\n The PDE solver you are executing is:")
     print("Deep Neural Network with %d layer" %len(num_hidden_neurons))
@@ -307,7 +308,19 @@ if Task == "2":
     Solving Eigenvalue Problems of Symmetric Matrices
     -------------
     """
-    print("\n In progress")
+
+    # Defining variables
+    matrix_size = 6 # Size of the matrix
+    string1 = "analytical" # To use a chosen matrix or a random matrix
+    run_iter = 1 # Number of times the program will run
+    num_iter = 50000 # Number of iterations
+    num_hidden_neurons = [100] # Number of hidden neurons in each layer
+    string2 = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
+    learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
+
+    NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, string2, learning_rate)
+
+
 
 else:
     print("Please write either 1 or 2")
