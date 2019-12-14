@@ -184,60 +184,6 @@ def NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, 
     plt.savefig("convergence_eigenvector.pdf")
     plt.show()
 
-<<<<<<< HEAD
-## Compare with the analytical solution
-print("\n Analytical Eigenvalues: \n", analytic_eigenvalue)
-print("\n Final Numerical Eigenvalue \n", eigenvalue)
-diff = np.min(abs(x_analytic - eigenvalue))
-print("\n")
-print('Absolute difference between Analytical Eigenvalue and TensorFlow DNN = ',np.max(diff))
-
-# Finding which element of analytic our estimated eigenvalue converges to
-
-index = np.argmin(abs(analytic_eigenvalue - eigenvalue))
-
-print(analytic_vector)
-print(x_dnn.T)
-c = next(color)
-for l in range(6):
-    plt.hlines(analytic_vector[index][l],0,num_iter,colors=c,linestyles="dashed",linewidth=2)
-    if l==5:
-        plt.hlines(-analytic_vector[index][l],0,num_iter,colors=c,linestyles="dashed",label="%2.5f" % analytic_eigenvalue[index],linewidth=2)
-        break
-    plt.hlines(-analytic_vector[index][l],0,num_iter,colors=c,linestyles="dashed",linewidth=2)
-plt.xlabel(r"Number of iterations", size=12)
-plt.ylabel(r"Value of the elements of the estimated eigenvector",size=12)
-plt.legend()
-plt.title(r"Convergence of the estimated eigenvector",size=12)
-plt.savefig("convergence_eigenvector1.pdf")
-plt.show()
-
-color=iter(cm.rainbow(np.linspace(1,0,run_iter+1)))
-
-for i in range(runs+1):
-    plt.plot(iterations,lambdas[i],c=c)
-    c=next(color)
-
-for l in range(6):
-    plt.hlines(analytic_eigenvalue[l],0,num_iter,colors=c,linestyles="dashed",label="%2.5f" % analytic_eigenvalue[l],linewidth=2,)
-plt.legend()
-plt.xlabel(r"Number of iterations", size=12)
-plt.ylabel(r"Value of the estimated eigenvalue",size=12)
-plt.title(r"Convergence of the estimated eigenvalue",size=12)
-plt.savefig("convergence_eigenvalue1.pdf")
-plt.show()
-
-#sns.set(color_codes=True)
-sns.distplot(np.reshape(lambdas[:,-1],[1,int(run_iter)]), bins=12, kde=False, rug=True)
-plt.ylabel(r"Counts of each eigenvalue",size=12)
-plt.xlabel(r"Eigenvalues", size=12)
-
-#plt.xlabel(r"Number of iterations", size=12)
-plt.savefig("histogram1.pdf")
-plt.show()
-
-print("Mean of number of iterations needed:", np.mean(num_iter_needed))
-=======
     color=iter(cm.rainbow(np.linspace(1,0,run_iter+1)))
 
     for i in range(runs+1):
@@ -264,4 +210,3 @@ print("Mean of number of iterations needed:", np.mean(num_iter_needed))
         plt.show()
 
     print("Mean of number of iterations needed:", np.mean(num_iter_needed))
->>>>>>> 4cc138d162ae4ec4e7622f1e4d02c2a858184030
