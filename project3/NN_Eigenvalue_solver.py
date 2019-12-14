@@ -164,6 +164,14 @@ def NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, 
         print("\n")
         print('Absolute difference between Analytical Eigenvalue and TensorFlow DNN = ',diff)
 
+        if string1 == "random":
+            ## Compare with the analytical solution
+            print("\n Numpy Eigenvalues: \n", numpy_eigenvalue)
+            print("\n Final Numerical Eigenvalue \n", eigenvalue)
+            diff = np.min(abs(numpy_eigenvalue - eigenvalue))
+            print("\n")
+            print('Absolute difference between Analytical Eigenvalue and TensorFlow DNN = ',diff)
+
     # Finding which element of analytic our estimated eigenvalue converges to
 
     index = np.argmin(abs(numpy_eigenvalue - eigenvalue))

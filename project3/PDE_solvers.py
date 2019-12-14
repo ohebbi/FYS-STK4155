@@ -73,7 +73,7 @@ def NN_PDE(dx, num_iter, num_hidden_neurons, string, learning_rate):
     with tf.name_scope('train'):
         if string == "GD":
             optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-        elif string == "Adam":
+        if string == "Adam":
             optimizer = tf.train.AdamOptimizer()
         traning_op = optimizer.minimize(loss)
 

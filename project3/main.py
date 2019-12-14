@@ -110,7 +110,7 @@ if Task == "1":
 
 
     # Defining variables
-    num_iter = 100000 # Number of iterations
+    num_iter = 10000 # Number of iterations
     num_hidden_neurons = [90] # Number of hidden neurons in each layer
     string = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
     learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
@@ -302,7 +302,7 @@ if Task == "1":
     print(np.max(abs(u_dnn[T1-1]-analytic)))
 
 
-if Task == "2":
+elif Task == "2":
     """
     -------------
     Solving Eigenvalue Problems of Symmetric Matrices
@@ -311,7 +311,7 @@ if Task == "2":
 
     # Defining variables
     matrix_size = 6 # Size of the matrix
-    string1 = "analytical" # To use a chosen matrix or a random matrix
+    string1 = "random" # To use a chosen matrix or a random matrix
     run_iter = 1 # Number of times the program will run
     num_iter = 50000 # Number of iterations
     num_hidden_neurons = [100] # Number of hidden neurons in each layer
