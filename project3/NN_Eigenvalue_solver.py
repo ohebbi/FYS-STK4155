@@ -181,7 +181,7 @@ def NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, 
     plt.ylabel(r"Value of the elements of the estimated eigenvector",size=12)
     plt.legend()
     plt.title(r"Convergence of the estimated eigenvector",size=12)
-    plt.savefig("convergence_eigenvector1.pdf")
+    plt.savefig("convergence_eigenvector.pdf")
     plt.show()
 
     color=iter(cm.rainbow(np.linspace(1,0,run_iter+1)))
@@ -196,7 +196,7 @@ def NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, 
     plt.xlabel(r"Number of iterations", size=12)
     plt.ylabel(r"Value of the estimated eigenvalue",size=12)
     plt.title(r"Convergence of the estimated eigenvalue",size=12)
-    plt.savefig("convergence_eigenvalue1.pdf")
+    plt.savefig("convergence_eigenvalue.pdf")
     plt.show()
 
     #sns.set(color_codes=True)
@@ -206,7 +206,7 @@ def NN_Eigenvalue(matrix_size, string1, run_iter, num_iter, num_hidden_neurons, 
         plt.xlabel(r"Eigenvalues", size=12)
 
         #plt.xlabel(r"Number of iterations", size=12)
-        plt.savefig("histogram1.pdf")
+        plt.savefig("histogram.pdf")
         plt.show()
 
     print("Mean of number of iterations needed:", np.mean(num_iter_needed))
