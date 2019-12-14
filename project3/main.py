@@ -110,7 +110,7 @@ if Task == "1":
 
 
     # Defining variables
-    num_iter = 100000 # Number of iterations
+    num_iter = 10000 # Number of iterations
     num_hidden_neurons = [90] # Number of hidden neurons in each layer
     string = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
     learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
@@ -302,7 +302,7 @@ if Task == "1":
     print(np.max(abs(u_dnn[T1-1]-analytic)))
 
 
-if Task == "2":
+elif Task == "2":
     """
     -------------
     Solving Eigenvalue Problems of Symmetric Matrices
