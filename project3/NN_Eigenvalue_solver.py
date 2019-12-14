@@ -217,7 +217,7 @@ plt.savefig("convergence_eigenvalue1.pdf")
 plt.show()
 
 #sns.set(color_codes=True)
-sns.distplot(np.reshape(lambdas[:,-1],[1,int(run_iter)]), bins=6, kde=False, rug=True)
+sns.distplot(np.reshape(lambdas[:,-1],[1,int(run_iter)]), bins=12, kde=False, rug=True)
 plt.ylabel(r"Counts of each eigenvalue",size=12)
 plt.xlabel(r"Eigenvalues", size=12)
 
