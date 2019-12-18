@@ -61,7 +61,7 @@ if Task == "1":
     uf = np.zeros((t.size,x.size))
 
 
-    #Initial codition
+    #Initial condition
     uf[0,:] = g(x)
     uf[0,0] = uf[0,N+1] = 0.0 #Implement boundaries rigidly
 
@@ -71,14 +71,14 @@ if Task == "1":
 
     """
     -------------
-    Backward Euler - Implicitt Scheme
+    Backward Euler - Implicit Scheme
     -------------
     """
 
     ub = np.zeros((t.size,x.size))
 
 
-    #Initial codition
+    #Initial condition
     ub[0,:] = g(x)
     ub[0,0] = ub[0,N+1] = 0.0 #Implement boundaries rigidly
 
@@ -88,14 +88,14 @@ if Task == "1":
 
     """
     -------------
-    Crank-Nicolson - Implicitt Scheme
+    Crank-Nicolson - Implicit Scheme
     -------------
     """
 
     uc = np.zeros((t.size,x.size))
 
 
-    #Initial codition
+    #Initial condition
     uc[0,:] = g(x)
     uc[0,0] = uc[0,N+1] = 0.0 #Implement boundaries rigidly
 
@@ -110,7 +110,7 @@ if Task == "1":
 
 
     # Defining variables
-    num_iter = 10000 # Number of iterations
+    num_iter = 100000 # Number of iterations
     num_hidden_neurons = [90] # Number of hidden neurons in each layer
     string = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
     learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
