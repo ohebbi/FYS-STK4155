@@ -5,8 +5,8 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib.pyplot import cm
 import numpy as np
 import os
-from PDE_solvers import *
-from NN_Eigenvalue_solver import *
+from functions.PDE_solvers import *
+from functions.NN_Eigenvalue_solver import *
 
 print("\n Project 3: Neural Network vs PDE's & Eigenvalue Problems")
 print(" Which Project Task do you want to run?: ")
@@ -311,10 +311,10 @@ elif Task == "2":
 
     # Defining variables
     matrix_size = 6 # Size of the matrix
-    string1 = "random" # To use a chosen matrix or a random matrix
+    string1 = "analytical" # To use a chosen matrix or a random matrix, either analytical or random
     run_iter = 1 # Number of times the program will run
     num_iter = 50000 # Number of iterations
-    num_hidden_neurons = [100] # Number of hidden neurons in each layer
+    num_hidden_neurons = [90] # Number of hidden neurons in each layer
     string2 = "Adam" # Choosing which Gradient Descent to use, eihter Adam or GD
     learning_rate = 0.0  # When using Adam as GD learning_rate is not needed, but when GD is used a learning_rate needs to be specified
 
